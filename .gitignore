@@ -1,4 +1,5 @@
 /target
-/.history
+.history
 /.idea
 /.vscode
+/src/tex

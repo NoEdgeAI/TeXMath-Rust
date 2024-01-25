@@ -2,7 +2,8 @@
 
 /*
 
-Exp = ENumber T.Text
+Exp = [Exp, ...]
+    | ENumber T.Text
     | EGrouped [Exp]
     | EDelimited T.Text T.Text [InEDelimited]
     | EIdentifier T.Text
@@ -126,6 +127,7 @@ pub enum Exp{
     ESymbol(TeXSymbolType, String),
     ESpace(Rational),
     ESub(Box<Exp>, Box<Exp>),
+    ESubsup(Box<Exp>, Box<Exp>, Box<Exp>),
     ESuper(Box<Exp>, Box<Exp>),
     EOver(bool, Box<Exp>, Box<Exp>),
     EUnder(bool, Box<Exp>, Box<Exp>),
@@ -136,7 +138,9 @@ pub enum Exp{
     ERoot(Box<Exp>, Box<Exp>),
     ESqrt(Box<Exp>),
     EScaled(Rational, Box<Exp>),
-    EArray(Alignment, ExpList),
+    EArray(Vec<Alignment>, Vec<Vec<ExpList>>),
     EText(TextType, String),
-    EStyled(TextType, Box<Exp>),
+    EStyled(TextType, ExpList),
+    Right(Box<Exp>),
+    Left(String),
 }
