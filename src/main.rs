@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::io;
@@ -5,7 +6,8 @@ use std::io;
 mod ast;
 use std::time::Instant;
 
-use crate::ast::parser::parse_exp;
+use crate::ast::ast_reader;
+
 fn read_dir_files_to_vec(dir: &Path) -> io::Result<Vec<String>> {
     let mut file_contents = Vec::new();
 
@@ -36,35 +38,62 @@ fn read_dir_files_to_vec(dir: &Path) -> io::Result<Vec<String>> {
     Ok(file_contents)
 }
 
-
-fn main() -> std::io::Result<()> {
+fn test_read_tex(){
     let dir = "./src/tex"; // 使用当前目录，你可以改为任意目录路径
-    let files = read_dir_files_to_vec(Path::new(dir))?; // 读取目录下所有文件
+    let files = read_dir_files_to_vec(Path::new(dir)); // 读取目录下所有文件
 
-    println!("{} files found", files.len());
+    println!("{} files found", files.as_ref().unwrap().len());
     
 
-    let mut i = 0;
+    let mut i = 0; 
+    let files = files.unwrap();
 
     let now = Instant::now();
     for file in files {
-        let res = parse_exp(&file);
-        // if has error
-        if let Err(e) = res {
-            println!("====================");
-            println!("File: {}", i);
-            println!("{}", file);
-            println!("Error: {}", e);
-            println!("====================");
-            return Ok(());
-        }else{
-            // if no error
-            i += 1;
+        match ast_reader::read_ast(&file) {
+            Ok (_) => {
+                println!("Exp read successfully");
+                i += 1;
+            },
+            Err(e) => {
+                println!("Parse error: {:?}", e);
+            }
         }
     }
 
     println!("{} files parsed successfully", i);
     println!("Time elapsed: {}ms", now.elapsed().as_millis());
+}
 
+fn test_totex(){
+    let exp_str = r#"
+[ ESubsup (ESymbol Op "\8747") (EIdentifier "a") (EIdentifier "x")
+, ESpace ((-1) % 6)
+, ESpace ((-1) % 6)
+, ESpace ((-1) % 6)
+, ESubsup (ESymbol Op "\8747") (EIdentifier "a") (EIdentifier "s")
+, EIdentifier "f"
+, EDelimited "(" ")" [ Right (EIdentifier "y") ]
+, ESpace (1 % 6)
+]"#;
+    match ast::ast_reader::read_ast(exp_str){
+        Ok(e) => {
+            println!("Exp read successfully");
+            let env = HashMap::<String, bool>::new();
+            let tr = ast::tex_writer::TexWriter::new_exp(
+                e, 
+                env);
+            println!("{}", tr.to_tex());
+        },
+        Err(e) => {
+            println!("Parse error: {:?}", e);
+        }
+    
+    }
+}
+
+
+fn main() -> std::io::Result<()> {
+    test_totex();
     Ok(())
 }

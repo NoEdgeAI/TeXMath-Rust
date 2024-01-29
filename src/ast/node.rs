@@ -53,6 +53,9 @@ TeXSymbolType = Ord | Op | Bin | Rel | Open | Close | Pun | Accent
 Alignment = AlignLeft | AlignRight | AlignCenter
  */
 
+
+// 定义所有的节点
+
 #[derive(PartialEq, Debug)]
 pub enum TeXSymbolType {
     Ord,
@@ -122,23 +125,29 @@ pub enum Exp{
     ExpList(Vec<Exp>), // -> [ ]
     EGrouped(ExpList), // -> EGrouped[ ]
     EDelimited(String, String, ExpList), // -> EDelimited[ ]
+    EArray(Vec<Alignment>, Vec<Vec<ExpList>>),
     EIdentifier(String),
     EMathOperator(String),
     ESymbol(TeXSymbolType, String),
     ESpace(Rational),
+    // super and sub
     ESub(Box<Exp>, Box<Exp>),
     ESubsup(Box<Exp>, Box<Exp>, Box<Exp>),
     ESuper(Box<Exp>, Box<Exp>),
+    
+    // over and under
     EOver(bool, Box<Exp>, Box<Exp>),
     EUnder(bool, Box<Exp>, Box<Exp>),
     EUnderOver(bool, Box<Exp>, Box<Exp>, Box<Exp>),
+
     EPhantom(Box<Exp>),
     EBoxed(Box<Exp>),
+
     EFraction(FractionType, Box<Exp>, Box<Exp>),
     ERoot(Box<Exp>, Box<Exp>),
     ESqrt(Box<Exp>),
+    
     EScaled(Rational, Box<Exp>),
-    EArray(Vec<Alignment>, Vec<Vec<ExpList>>),
     EText(TextType, String),
     EStyled(TextType, ExpList),
     Right(Box<Exp>),

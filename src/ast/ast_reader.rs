@@ -1,4 +1,4 @@
-
+use super::node;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -8,7 +8,21 @@ use nom::{
     IResult,
 };
 
-use super::node;
+// ast reader
+
+pub fn read_ast(ast: &str) -> Result<node::Exp, String> {
+    match parse_exp(ast) {
+        Ok((_, e)) => {
+            Ok(e)
+        },
+        Err(e) => {
+            let msg = format!("Parse error: {:?}", e);
+            Result::Err(msg)
+        }
+    }
+}
+
+
 
 #[test]
 fn test_parse_exp_list() {
@@ -81,7 +95,7 @@ fn test_parse_exp() {
     assert_eq!(parse_exp(test_case), Ok(("", node::Exp::EMathOperator("sin".to_string()))));
 }
 
-pub fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
+fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
     let (input, _) = multispace0(input)?;
 
     if input.starts_with('[') {
