@@ -115,17 +115,19 @@ pub struct Rational {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct ExpList {
-    pub list: Vec<Exp>,
+pub enum InEDelimited {
+    Middle(String),
+    Exp(Exp),
 }
+
+type ArrayLine = Vec<Vec<Exp>>;
 
 #[derive(PartialEq, Debug)]
 pub enum Exp{
     ENumber(String),
-    ExpList(Vec<Exp>), // -> [ ]
-    EGrouped(ExpList), // -> EGrouped[ ]
-    EDelimited(String, String, ExpList), // -> EDelimited[ ]
-    EArray(Vec<Alignment>, Vec<Vec<ExpList>>),
+    EGrouped(Vec<Exp>), // -> EGrouped[ ]
+    EDelimited(String, String, Vec<InEDelimited>), // -> EDelimited[ ]
+    EArray(Vec<Alignment>, Vec<ArrayLine>), // -> EArray[ ]
     EIdentifier(String),
     EMathOperator(String),
     ESymbol(TeXSymbolType, String),
@@ -149,7 +151,7 @@ pub enum Exp{
     
     EScaled(Rational, Box<Exp>),
     EText(TextType, String),
-    EStyled(TextType, ExpList),
+    EStyled(TextType, Vec<Exp>),
     Right(Box<Exp>),
     Left(String),
 }

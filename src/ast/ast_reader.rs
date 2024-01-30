@@ -8,10 +8,9 @@ use nom::{
     IResult,
 };
 
-// ast reader
-
-pub fn read_ast(ast: &str) -> Result<node::Exp, String> {
-    match parse_exp(ast) {
+// ast reader [Exp ...]
+pub fn read_ast(ast: &str) -> Result<Vec<node::Exp>, String> {
+    match parse_exp_list(ast) {
         Ok((_, e)) => {
             Ok(e)
         },
@@ -27,37 +26,47 @@ pub fn read_ast(ast: &str) -> Result<node::Exp, String> {
 #[test]
 fn test_parse_exp_list() {
     let test_case = "[ENumber \"1\", ENumber \"2\"]";
+    let (output, exp) = parse_exp_list(test_case).unwrap();
     assert_eq!(
-        parse_exp_list(test_case), 
-        Ok(
-            ("", 
-            node::ExpList{list: vec![node::Exp::ENumber("1".to_string()), 
-            node::Exp::ENumber("2".to_string())]}))
-        );
+        (output.trim(), exp),
+        ("",
+        vec![
+            node::Exp::ENumber("1".to_string()),
+            node::Exp::ENumber("2".to_string())
+        ]
+        )
+    );
 
     let test_case = r#"
-    [ ESuper (EIdentifier "b") (ENumber "2")
-    , ESymbol Bin "\8722"
-    , ENumber "4"
-    , EIdentifier "a"
-    , EIdentifier "c"
+    [ Right (ENumber "5")
+    , Right (ESymbol Bin "\8722")
+    , Right (EIdentifier "T")
     ]
     "#;
-    println!("{:?}", parse_exp_list(test_case));
+    let (output, exp) = parse_exp_list(test_case).unwrap();
+    assert_eq!(
+        (output.trim(), exp),
+        ("",vec![
+                    node::Exp::Right(Box::new(node::Exp::ENumber("5".to_string()))),
+                    node::Exp::Right(Box::new(node::Exp::ESymbol(node::TeXSymbolType::Bin, "\\8722".to_string()))),
+                    node::Exp::Right(Box::new(node::Exp::EIdentifier("T".to_string()))),
+                ]
+        
+        )
+    );
 }
 
-// [Exp, Exp, Exp ...]
-fn parse_exp_list(input: &str) -> IResult<&str, node::ExpList> {
+fn parse_indelimited(input: &str) -> IResult<&str, Vec<node::InEDelimited>> {
     let mut input = input;
     (input, _) = multispace0(input)?;
     (input, _) = char('[')(input)?;
-    let mut exp_list = Vec::new();
+    let mut exp_list = Vec::<node::InEDelimited>::new();
 
     // 判断是否为空
     (input, _ ) = multispace0(input)?;
     if input.starts_with(']'){
         (input, _) = char(']')(input)?;
-        return Ok((input, node::ExpList{list:exp_list}));
+        return Ok((input, exp_list));
     }
 
     // 如果input不是mut的话, 每次循环会shadow input, 从而导致input的值不变
@@ -67,8 +76,7 @@ fn parse_exp_list(input: &str) -> IResult<&str, node::ExpList> {
 
         let (tmp , exp) = parse_exp(input)?;
         input = tmp;
-        exp_list.push(exp);
-
+        exp_list.push(node::InEDelimited::Exp(exp));
         (input, _) = multispace0(input)?;
 
         if input.starts_with(']'){
@@ -80,7 +88,43 @@ fn parse_exp_list(input: &str) -> IResult<&str, node::ExpList> {
     }
 
     (input, _) = char(']')(input)?;
-    Ok((input, node::ExpList{list:exp_list})) // Notice the wrapping inside Exp::ExpList
+    Ok((input, exp_list))
+}
+
+// [Exp, Exp, Exp ...]
+fn parse_exp_list(input: &str) -> IResult<&str, Vec<node::Exp>> {
+    let mut input = input;
+    (input, _) = multispace0(input)?;
+    (input, _) = char('[')(input)?;
+    let mut exp_list = Vec::new();
+
+    // 判断是否为空
+    (input, _ ) = multispace0(input)?;
+    if input.starts_with(']'){
+        (input, _) = char(']')(input)?;
+        return Ok((input, exp_list));
+    }
+
+    // 如果input不是mut的话, 每次循环会shadow input, 从而导致input的值不变
+    // 陷入死循环
+    loop{
+        (input, _) = multispace0(input)?;
+
+        let (tmp , exp) = parse_exp(input)?;
+        input = tmp;
+        exp_list.push(exp);
+        (input, _) = multispace0(input)?;
+
+        if input.starts_with(']'){
+            break;
+        }
+
+        (input, _) = char(',')(input)?;
+        (input, _) = multispace0(input)?;
+    }
+
+    (input, _) = char(']')(input)?;
+    Ok((input, exp_list))
 }
 
 #[test]
@@ -93,19 +137,19 @@ fn test_parse_exp() {
 
     let test_case = "EMathOperator \"sin\"";
     assert_eq!(parse_exp(test_case), Ok(("", node::Exp::EMathOperator("sin".to_string()))));
+
+    let test_case = "Right (ENumber \"5\")";
+    assert_eq!(parse_exp(test_case), Ok(("", node::Exp::Right(Box::new(node::Exp::ENumber("5".to_string()))))));
 }
 
 fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
     let (input, _) = multispace0(input)?;
+    // 往前多看几个字符, 可以避免回溯, 提高效率
 
-    if input.starts_with('[') {
-        // exp_list
-        let (input, exp_list) = parse_exp_list(input)?;
-        return Ok((input, node::Exp::ExpList(exp_list.list)));
-    }else if input.starts_with("Right"){
+    if input.starts_with("Right"){
         // Right
         let (input, exp) = parse_right(input)?;
-        return Ok((input, node::Exp::Right(Box::new(exp))));
+        return Ok((input, exp));
     }else if input.starts_with("ESymbol"){
         // symbol
         let (input, exp) = parse_symbol(input)?;
@@ -461,7 +505,7 @@ fn parse_delimited(input: &str) -> IResult<&str, node::Exp> {
     let (tmp, right_delimiter) = parse_quoted_string(output)?;
     output = tmp;
     (output, _) = multispace0(output)?;
-    let (output, exp_list) = parse_exp_list(output)?;
+    let (output, exp_list) = parse_indelimited(output)?;
     Ok((output, node::Exp::EDelimited(left_delimiter, right_delimiter, exp_list)))
 }
 
@@ -473,8 +517,11 @@ fn test_parse_grouped() {
         Ok(
             ("", 
             node::Exp::EGrouped(
-            node::ExpList{list: vec![node::Exp::ENumber("1".to_string()), 
-            node::Exp::ENumber("2".to_string())]}))
+                vec![
+                    node::Exp::ENumber("1".to_string()), 
+                    node::Exp::ENumber("2".to_string())
+                ]
+            ))
         ));
 
     let test_case = r#"
@@ -872,7 +919,23 @@ fn test_parse_right(){
     let test_case = r#"
     Right (EFraction NormalFrac (ENumber "2") (EIdentifier "x"))
     "#;
-    println!("{:?}", parse_right(test_case));
+    let (output, exp) = parse_right(test_case).unwrap();
+    assert_eq!(
+        (output.trim(), exp), 
+        ("", node::Exp::Right(Box::new(node::Exp::EFraction(node::FractionType::NormalFrac, 
+            Box::new(node::Exp::ENumber("2".to_string())), 
+            Box::new(node::Exp::EIdentifier("x".to_string()))))))
+    );
+
+
+    let test_case = r#"
+    Right (ENumber "5")
+    "#;
+    let (output, exp) = parse_right(test_case).unwrap();
+    assert_eq!(
+        (output.trim(), exp), 
+        ("", node::Exp::Right(Box::new(node::Exp::ENumber("5".to_string()))))
+    );
 }
 // Right (Exp)
 fn parse_right(input: &str) -> IResult<&str, node::Exp> {
@@ -939,7 +1002,7 @@ fn test_parse_styled() {
         Ok(
             ("", 
             node::Exp::EStyled(node::TextType::TextNormal,
-            node::ExpList{list: vec![node::Exp::ENumber("1".to_string())]}))
+            vec![node::Exp::ENumber("1".to_string())]))
         ));
 
     let test_case = r#"
@@ -1171,11 +1234,11 @@ fn parse_array(input: &str) -> IResult<&str, node::Exp> {
 
     // rows
     (input, _) = tag("[")(input)?;
-    let mut rows:Vec<Vec<node::ExpList>> = Vec::new();
+    let mut rows:Vec<Vec<Vec<node::Exp>>> = Vec::new();
     loop {
         (input, _) = multispace0(input)?;
 
-        let mut row:Vec<node::ExpList> = Vec::new();
+        let mut row:Vec<Vec<node::Exp>> = Vec::new();
         (input, _) = tag("[")(input)?;
         loop {
             (input, _) = multispace0(input)?;
@@ -1225,27 +1288,7 @@ fn test_parse_array() {
     let res = parse_array(test_case);
     println!("{:?}", res);
 
-    assert_eq!(
-        res,
-        Ok(
-            ("", 
-            node::Exp::EArray(
-                vec![node::Alignment::AlignLeft, node::Alignment::AlignRight],
-                vec![
-                    vec![
-                        node::ExpList{list: vec![]},
-                        node::ExpList{list: vec![node::Exp::ENumber("1".to_string())]},
-                        node::ExpList{list: vec![node::Exp::ENumber("2".to_string())]},
-                    ],
-                    vec![
-                        node::ExpList{list: vec![node::Exp::EText(node::TextType::TextNormal, "num".to_string())]},
-                        node::ExpList{list: vec![node::Exp::ENumber("3".to_string())]},
-                        node::ExpList{list: vec![node::Exp::ENumber("4".to_string())]},
-                    ],
-                ]
-            ))
-        )
-    )
+
 }
 
 

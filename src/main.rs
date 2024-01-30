@@ -51,12 +51,15 @@ fn test_read_tex(){
     let now = Instant::now();
     for file in files {
         match ast_reader::read_ast(&file) {
-            Ok (_) => {
-                println!("Exp read successfully");
+            Ok (exp) => {
+                // println!("Exp read successfully");
+                // dbg!(exp);
                 i += 1;
             },
             Err(e) => {
+                println!("file: {}", file);
                 println!("Parse error: {:?}", e);
+                return;
             }
         }
     }
@@ -67,15 +70,39 @@ fn test_read_tex(){
 
 fn test_totex(){
     let exp_str = r#"
-[ ESubsup (ESymbol Op "\8747") (EIdentifier "a") (EIdentifier "x")
-, ESpace ((-1) % 6)
-, ESpace ((-1) % 6)
-, ESpace ((-1) % 6)
-, ESubsup (ESymbol Op "\8747") (EIdentifier "a") (EIdentifier "s")
-, EIdentifier "f"
-, EDelimited "(" ")" [ Right (EIdentifier "y") ]
-, ESpace (1 % 6)
-]"#;
+    [ EUnderover
+    True
+    (ESymbol Op "\8721")
+    (EGrouped [ EIdentifier "m" , ESymbol Rel "=" , ENumber "1" ])
+    (ESymbol Ord "\8734")
+, EUnderover
+    True
+    (ESymbol Op "\8721")
+    (EGrouped [ EIdentifier "n" , ESymbol Rel "=" , ENumber "1" ])
+    (ESymbol Ord "\8734")
+, EFraction
+    NormalFrac
+    (EGrouped
+       [ ESuper (EIdentifier "m") (ENumber "2")
+       , ESpace (1 % 6)
+       , EIdentifier "n"
+       ])
+    (EGrouped
+       [ ESuper (ENumber "3") (EIdentifier "m")
+       , EDelimited
+           "("
+           ")"
+           [ Right (EIdentifier "m")
+           , Right (ESpace (1 % 6))
+           , Right (ESuper (ENumber "3") (EIdentifier "n"))
+           , Right (ESymbol Bin "+")
+           , Right (EIdentifier "n")
+           , Right (ESpace (1 % 6))
+           , Right (ESuper (ENumber "3") (EIdentifier "m"))
+           ]
+       ])
+]
+    "#;
     match ast::ast_reader::read_ast(exp_str){
         Ok(e) => {
             println!("Exp read successfully");
@@ -83,7 +110,7 @@ fn test_totex(){
             let tr = ast::tex_writer::TexWriter::new_exp(
                 e, 
                 env);
-            println!("{}", tr.to_tex());
+            println!("|{}|", tr.to_tex());
         },
         Err(e) => {
             println!("Parse error: {:?}", e);
