@@ -1,11 +1,6 @@
 use super::node;
 use nom::{
-    branch::alt,
-    bytes::complete::tag,
-    character::complete::{char, digit1, multispace0, none_of},
-    combinator::map,
-    error::ErrorKind,
-    IResult,
+    branch::alt, bytes::complete::tag, character::complete::{char, digit1, multispace0, none_of}, combinator::map, error::ErrorKind, Err, IResult
 };
 
 // ast reader [Exp ...]
@@ -36,24 +31,6 @@ fn test_parse_exp_list() {
         ]
         )
     );
-
-    let test_case = r#"
-    [ Right (ENumber "5")
-    , Right (ESymbol Bin "\8722")
-    , Right (EIdentifier "T")
-    ]
-    "#;
-    let (output, exp) = parse_exp_list(test_case).unwrap();
-    assert_eq!(
-        (output.trim(), exp),
-        ("",vec![
-                    node::Exp::Right(Box::new(node::Exp::ENumber("5".to_string()))),
-                    node::Exp::Right(Box::new(node::Exp::ESymbol(node::TeXSymbolType::Bin, "\\8722".to_string()))),
-                    node::Exp::Right(Box::new(node::Exp::EIdentifier("T".to_string()))),
-                ]
-        
-        )
-    );
 }
 
 fn parse_indelimited(input: &str) -> IResult<&str, Vec<node::InEDelimited>> {
@@ -74,9 +51,18 @@ fn parse_indelimited(input: &str) -> IResult<&str, Vec<node::InEDelimited>> {
     loop{
         (input, _) = multispace0(input)?;
 
-        let (tmp , exp) = parse_exp(input)?;
-        input = tmp;
-        exp_list.push(node::InEDelimited::Exp(exp));
+        if input.starts_with("Left"){
+            let (tmp, left) = parse_left(input)?;
+            input = tmp;
+            exp_list.push(left);
+        }else if input.starts_with("Right"){
+            let (tmp, right) = parse_right(input)?;
+            input = tmp;
+            exp_list.push(right);
+        }else{
+            return Err(nom::Err::Error(nom::error::Error::new(input, ErrorKind::Tag)));
+        }
+
         (input, _) = multispace0(input)?;
 
         if input.starts_with(']'){
@@ -138,19 +124,13 @@ fn test_parse_exp() {
     let test_case = "EMathOperator \"sin\"";
     assert_eq!(parse_exp(test_case), Ok(("", node::Exp::EMathOperator("sin".to_string()))));
 
-    let test_case = "Right (ENumber \"5\")";
-    assert_eq!(parse_exp(test_case), Ok(("", node::Exp::Right(Box::new(node::Exp::ENumber("5".to_string()))))));
 }
 
 fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
     let (input, _) = multispace0(input)?;
     // 往前多看几个字符, 可以避免回溯, 提高效率
 
-    if input.starts_with("Right"){
-        // Right
-        let (input, exp) = parse_right(input)?;
-        return Ok((input, exp));
-    }else if input.starts_with("ESymbol"){
+    if input.starts_with("ESymbol"){
         // symbol
         let (input, exp) = parse_symbol(input)?;
         return Ok((input, exp));
@@ -237,10 +217,6 @@ fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
     }else if input.starts_with("ESpace"){
         // space
         let (input, exp) = parse_space(input)?;
-        return Ok((input, exp));
-    }else if input.starts_with("Left"){
-        // left
-        let (input, exp) = parse_left(input)?;
         return Ok((input, exp));
     }
     
@@ -473,16 +449,6 @@ fn parse_text(input: &str) -> IResult<&str, node::Exp> {
 
 #[test]
 fn test_parse_delimited() {
-    // let test_case = "EDelimited \"(\" \")\" [ENumber \"1\", ENumber \"2\"]";
-    // assert_eq!(
-    //     parse_delimited(test_case), 
-    //     Ok(
-    //         ("", 
-    //         node::Exp::EDelimited("(".to_string(), ")".to_string(), 
-    //         node::ExpList{list: vec![node::Exp::ENumber("1".to_string()), 
-    //         node::Exp::ENumber("2".to_string())]}))
-    //     ));
-
     let test_case = r#"
     EDelimited
     "|"
@@ -490,7 +456,18 @@ fn test_parse_delimited() {
     [ Right (EFraction NormalFrac (EIdentifier "H") (EIdentifier "K"))
     ]
     "#;
-    println!("{:?}", parse_delimited(test_case));
+    
+    let (output, res) = parse_delimited(test_case).unwrap();
+        
+    assert_eq!(
+        (output.trim(), res), 
+        ("", 
+        node::Exp::EDelimited("|".to_string(), "|".to_string(), 
+        vec![node::InEDelimited::Right(
+            node::Exp::EFraction(node::FractionType::NormalFrac,
+            Box::new(node::Exp::EIdentifier("H".to_string())),
+            Box::new(node::Exp::EIdentifier("K".to_string()))))]))    
+    )
 }
 
 // delimited: EDelimited String String [Exp]
@@ -904,14 +881,14 @@ fn test_parse_left() {
 }
 
 // Left "\8722"
-fn parse_left(input: &str) -> IResult<&str, node::Exp> {
+fn parse_left(input: &str) -> IResult<&str, node::InEDelimited> {
     let mut output = input;
     (output, _) = multispace0(output)?;
     (output, _) = tag("Left")(output)?;
     (output, _) = multispace0(output)?;
     let (tmp, text) = parse_quoted_string(output)?;
     output = tmp;
-    Ok((output, node::Exp::Left(text)))
+    Ok((output, node::InEDelimited::Left(text)))
 }
 
 #[test]
@@ -922,9 +899,13 @@ fn test_parse_right(){
     let (output, exp) = parse_right(test_case).unwrap();
     assert_eq!(
         (output.trim(), exp), 
-        ("", node::Exp::Right(Box::new(node::Exp::EFraction(node::FractionType::NormalFrac, 
-            Box::new(node::Exp::ENumber("2".to_string())), 
-            Box::new(node::Exp::EIdentifier("x".to_string()))))))
+        ("", node::InEDelimited::Right(
+            node::Exp::EFraction(
+                node::FractionType::NormalFrac,
+                Box::new(node::Exp::ENumber("2".to_string())),
+                Box::new(node::Exp::EIdentifier("x".to_string()))
+            )
+        ))
     );
 
 
@@ -934,11 +915,11 @@ fn test_parse_right(){
     let (output, exp) = parse_right(test_case).unwrap();
     assert_eq!(
         (output.trim(), exp), 
-        ("", node::Exp::Right(Box::new(node::Exp::ENumber("5".to_string()))))
+        ("", node::InEDelimited::Right(node::Exp::ENumber("5".to_string())))
     );
 }
 // Right (Exp)
-fn parse_right(input: &str) -> IResult<&str, node::Exp> {
+fn parse_right(input: &str) -> IResult<&str, node::InEDelimited> {
     let mut output = input;
     (output, _) = multispace0(output)?;
     (output, _) = tag("Right")(output)?;
@@ -949,7 +930,7 @@ fn parse_right(input: &str) -> IResult<&str, node::Exp> {
     output = tmp;
     (output, _) = multispace0(output)?;
     (output, _) = char(')')(output)?;
-    Ok((output, node::Exp::Right(Box::new(exp))))
+    Ok((output, node::InEDelimited::Right(exp)))
 }
 
 // EPhantom (Exp)

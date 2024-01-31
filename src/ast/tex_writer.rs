@@ -1,5 +1,6 @@
 use core::panic;
 use std::collections::HashMap;
+use std::option;
 
 use super::node;
 use super::to_tex_unicode;
@@ -35,31 +36,18 @@ fn test_tex_writer(){
     envs.insert("amssymb".to_string(), true);
     let exp = super::ast_reader::read_ast(case).unwrap();
     dbg!(&exp);
-    let tex_writer: TexWriter = TexWriter::new_exp(exp, envs);
-    let tex = tex_writer.to_tex();
+    let tex = write_tex_with_env(exp, envs);
     println!("{}", tex);
 }
 
-impl TexWriter {
-    pub fn new_exp(e: Vec<node::Exp>, envs: HashMap<String, bool>) -> Self {
-        TexWriter {
-            e: e,
-            envs: envs,
-        }
-    }
+// 把Exp转换为TeX, 带上环境
+pub fn write_tex_with_env(exps: Vec<Exp>, envs: HashMap<String, bool>) -> String{
+    let mut s = String::new();
 
-    pub fn to_tex(&self) -> String{
-        let mut s = String::new();
-        
-        for exp in &self.e{
-            exp.write_tex(&mut s, &self.envs);
-        }
-        s
+    for exp in exps{
+        exp.write_tex(&mut s, &envs);
     }
-}
-
-pub trait ToTeX {
-    fn to_show(&self, envs: &HashMap<String, bool>) -> String;
+    s
 }
 
 // 通用分数
@@ -81,42 +69,35 @@ fn write_gen_frac(s: &mut String, open: &str, close: &str){
 fn is_all_right(exp_list: &Vec<node::InEDelimited>) -> bool{
     for exp in exp_list{
         match exp {
-            node::InEDelimited::Middle(..) => {
+            node::InEDelimited::Left(..) => {
                 return false;
             },
-            node::InEDelimited::Exp(exp) => {
-                match exp {
-                    Exp::Right(..) => {},
-                    _ => {
-                        return false;
-                    }
-                }
-            }
+            node::InEDelimited::Right(_) => {}
         }
     }
     return true;
 }
 
-// get tex math m
-// TODO escape get tex math m
-fn get_tex_math_m(open: &str, envs: &HashMap<String, bool>) -> String{
-    let open = to_tex_unicode::escape_symbol_unicode(open, envs);
+// 把字符串的每一个字符转换为unicode escape
+fn get_tex_math_many(s: &str, envs: &HashMap<String, bool>) -> String{
+    // TODO: escape each char
+    let open = to_tex_unicode::escape_single_symbol_unicode(s, envs);
     return String::from(open);
 }
 
 #[test]
 fn test_remove_outer_group(){
     let test_case = Exp::EGrouped(vec![
-            Exp::Right(Box::new(Exp::ENumber("5".to_string()))),
+            Exp::ENumber("5".to_string()),
         ]
     );
 
     let res = remove_outer_group(&test_case);
-    assert_eq!(res, &Exp::Right(Box::new(Exp::ENumber("5".to_string()))));
+    assert_eq!(res, &Exp::ENumber("5".to_string()));
 
     let test_case = Exp::EGrouped(vec![
-            Exp::Right(Box::new(Exp::ENumber("5".to_string()))),
-            Exp::Right(Box::new(Exp::ENumber("6".to_string()))),
+            Exp::ENumber("5".to_string()),
+            Exp::ENumber("6".to_string()),
         ]
     );
 
@@ -143,17 +124,26 @@ fn remove_outer_group(exp: &Exp) -> &Exp{
 
 #[test]
 fn test_is_all_standard_height(){
-    // [ Right (ENumber "5")
-    // , Right (ESymbol Bin "\8722")
-    // , Right (EIdentifier "T")
-    // ]
     let test_case = vec![
-        node::InEDelimited::Exp(Exp::Right(Box::new(Exp::ENumber("5".to_string())))),
-        node::InEDelimited::Exp(Exp::Right(Box::new(Exp::ESymbol(node::TeXSymbolType::Bin, "\\8722".to_string())))),
-        node::InEDelimited::Exp(Exp::Right(Box::new(Exp::EIdentifier("T".to_string())))),
+        node::InEDelimited::Right(Exp::ENumber("5".to_string())),
+        node::InEDelimited::Right(Exp::ESymbol(node::TeXSymbolType::Bin, "\u{2212}".to_string())),
+        node::InEDelimited::Right(Exp::EIdentifier("T".to_string())),
         ];
 
     assert_eq!(is_all_standard_height(&test_case), true);
+
+    let test_case = vec![
+        node::InEDelimited::Right(Exp::ENumber("5".to_string())),
+        node::InEDelimited::Right(Exp::ESymbol(node::TeXSymbolType::Bin, "\u{2212}".to_string())),
+        node::InEDelimited::Right(Exp::EIdentifier("T".to_string())),
+        node::InEDelimited::Right(Exp::EGrouped(vec![
+            Exp::ENumber("5".to_string()),
+            Exp::ENumber("6".to_string()),
+        ])),
+        node::InEDelimited::Left(")".to_string()),
+        ];
+    
+    assert_eq!(is_all_standard_height(&test_case), false);
 }
 
 // check if all exp is standard height:
@@ -161,33 +151,19 @@ fn test_is_all_standard_height(){
 fn is_all_standard_height(exp: &Vec<node::InEDelimited>) -> bool{
     for e in exp{
         match e {
-            node::InEDelimited::Middle(..) => {
-                panic!("is_all_standard_height: middle not implemented");
+            node::InEDelimited::Left(..) => {
+                return false;
             },
-            node::InEDelimited::Exp(exp) => {
-                match exp {
-                    Exp::Right(exp) => {
-                        match exp.as_ref(){
-                            Exp::ENumber(..) => {},
-                            Exp::EIdentifier(..) => {},
-                            Exp::ESpace(..) => {},
-                            Exp::ESymbol(symbol_type, ..) => {
-                                match symbol_type{
-                                    node::TeXSymbolType::Ord => {},
-                                    node::TeXSymbolType::Op => {},
-                                    node::TeXSymbolType::Bin => {},
-                                    node::TeXSymbolType::Rel => {},
-                                    node::TeXSymbolType::Pun => {},
-                                    _ => {
-                                        return false;
-                                    }
-                                }
-                            },
-                            _ => {
-                                return false;
-                            }
-                        }
-                    },
+            node::InEDelimited::Right(exp) => {
+                match exp{
+                    Exp::ENumber(..) => {},
+                    Exp::EIdentifier(..) => {},
+                    Exp::ESpace(..) => {},
+                    Exp::ESymbol(node::TeXSymbolType::Ord, ..) => {},
+                    Exp::ESymbol(node::TeXSymbolType::Op, ..) => {},
+                    Exp::ESymbol(node::TeXSymbolType::Bin, ..) => {},
+                    Exp::ESymbol(node::TeXSymbolType::Rel, ..) => {},
+                    Exp::ESymbol(node::TeXSymbolType::Pun, ..) => {},
                     _ => {
                         return false;
                     }
@@ -229,7 +205,7 @@ fn write_binom(s: &mut String, control: &str, exp1: &Exp, exp2: &Exp, envs: &Has
 // AlignLeft -> l, AlignRight -> r, AlignCenter -> c
 fn write_alignments(s: &mut String, aligns: &Vec<node::Alignment>){
     for align in aligns{
-        s.push_str(&align.to_show());
+        s.push_str(&align.to_str());
     }
 }
 
@@ -237,18 +213,18 @@ fn write_alignments(s: &mut String, aligns: &Vec<node::Alignment>){
 fn test_write_arraylines(){
     let case = vec![
         vec![
-            vec![Exp::Right(Box::new(Exp::ENumber("1".to_string())))],
-            vec![Exp::Right(Box::new(Exp::ENumber("2".to_string())))],
+            vec![Exp::ENumber("1".to_string())],
+            vec![Exp::ENumber("2".to_string())],
         ],
         vec![
-            vec![Exp::Right(Box::new(Exp::ENumber("3".to_string())))],
-            vec![Exp::Right(Box::new(Exp::ENumber("4".to_string())))],
+            vec![Exp::ENumber("3".to_string())],
+            vec![Exp::ENumber("4".to_string())],
         ],
     ];
 
     let mut s = String::new();
     write_arraylines(&mut s, &case, &HashMap::new());
-    assert_eq!(s, "1 & 2 \\\\\n3 & 4 \\\\\n");
+    assert_eq!(s, "1 & 2 \\\\\n3 & 4");
 }
 
 // 输出array的单个元素
@@ -262,7 +238,6 @@ fn write_arrayline(s: &mut String, row: &Vec<node::Exp>, envs: &HashMap<String, 
         panic!("writeArrayLine: multi elements not implemented")
     }
 }
-
 
 // 输出array rows:
 // xxx & xxx & xxx \\
@@ -350,32 +325,75 @@ fn write_array_table(s: &mut String, name: &str, aligns: &Vec<node::Alignment>, 
     s.push_str("}");
 }
 
-// TODO neat this function
-fn delimited_write_right_array(s: &mut String, left: &String, right: &String, exp: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>) -> bool {
+// 当Delimited只有一个Right元素且里面是EArray时调用
+// Delimited open close [Right (EArray [AlignCenter] [[[x]],[[y]]])]
+fn delimited_write_right_array(s: &mut String, open: &String, close: &String, exp: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>) -> bool {
     if exp.len() != 1{
         return false;
     }
     let exp = &exp[0];
     match exp{
-        node::InEDelimited::Middle(..) => {
-            panic!("delimited in middle not implemented");
+        node::InEDelimited::Left(..) => {
+            return false;
         },
-        node::InEDelimited::Exp(exp) => {
-            if let Exp::Right(ref exp) = exp{
-                if let Exp::EArray(ref aligns, ref rows) = exp.as_ref(){
-                    if envs["amsmath"]{
-                        if(left.as_str() == "{" && right.as_str() == "") || aligns == &[node::Alignment::AlignLeft, node::Alignment::AlignLeft]{
-                            // TODO delimited write array table
-                            panic!("delimited_write_right_array not implemented");
+        node::InEDelimited::Right(exp) => {
+            if let Exp::EArray(aligns, rows) = exp{
+                if envs["amsmath"]{
+                    match (open.as_str(), close.as_str()) {
+                        ("{", "") => {
+                            if aligns.len() == 2 && aligns[0] == node::Alignment::AlignLeft && aligns[1] == node::Alignment::AlignLeft{
+                                // \begin{cases} \end{cases}
+                                write_array_table(s, "cases", &Vec::<node::Alignment>::new(), rows, envs);
+                                return true;
+                            }
                         }
+                        ("(",")") => {
+                            if aligns_is_all_center(aligns){
+                                // \begin{pmatrix} \end{pmatrix}
+                                write_array_table(s, "pmatrix", &Vec::<node::Alignment>::new(), rows, envs);
+                                return true;
+                            }
+                        }
+                        ("[","]") => {
+                            if aligns_is_all_center(aligns){
+                                // \begin{bmatrix} \end{bmatrix}
+                                write_array_table(s, "bmatrix", &Vec::<node::Alignment>::new(), rows, envs);
+                                return true;
+                            }
+                        }
+                        ("{","}") => {
+                            if aligns_is_all_center(aligns){
+                                // \begin{Bmatrix} \end{Bmatrix}
+                                write_array_table(s, "Bmatrix", &Vec::<node::Alignment>::new(), rows, envs);
+                                return true;
+                            }
+                        }
+                        ("\u{2223}", "\u{2223}") => {
+                            if aligns_is_all_center(aligns){
+                                // \begin{vmatrix} \end{vmatrix}
+                                write_array_table(s, "vmatrix", &Vec::<node::Alignment>::new(), rows, envs);
+                                return true;
+                            }
+                        }
+                        ("\u{2225}", "\u{2225}") => {
+                            if aligns_is_all_center(aligns){
+                                // \begin{Vmatrix} \end{Vmatrix}
+                                write_array_table(s, "Vmatrix", &Vec::<node::Alignment>::new(), rows, envs);
+                                return true;
+                            }
+                        }
+                        _ => {},
                     }
                 }
+                // 以上都不是，那么就是一个普通的array
+                delimited_write_delim(s, FenceType::DLeft, &open);
+                exp.write_tex(s, envs); // TODO: write array is ?
+                delimited_write_delim(s, FenceType::DRight, &close);
             }
         }
     }
     return false;
 }
-
 
 fn delimited_fraction_noline(s: &mut String, left: &String, right: &String, exp_list: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>) -> bool { 
     if exp_list.len() != 1{
@@ -383,10 +401,10 @@ fn delimited_fraction_noline(s: &mut String, left: &String, right: &String, exp_
     }
     let exp = &exp_list[0];
     match exp {
-        node::InEDelimited::Middle(_) => {
+        node::InEDelimited::Left(_) => {
             panic!("delimited in middle not implemented");
         },
-        node::InEDelimited::Exp(exp) => {
+        node::InEDelimited::Right(exp) => {
             if let Exp::EFraction(node::FractionType::NoLineFrac, e1, e2) = exp{
                 let frac_exp1 = &e1;
                 let frac_exp2: &&Box<Exp> = &e2;
@@ -422,16 +440,16 @@ fn delimited_fraction_noline(s: &mut String, left: &String, right: &String, exp_
     return false;
 }
 enum FenceType{
-    DLeft(),
-    DMiddle(),
-    DRight(),
+    DLeft,
+    DMiddle,
+    DRight,
 }
 fn delimited_write_delim(s: &mut String, ft: FenceType, delim: &str){
     // TODO: escape string
     // TODO: valid delim
     panic!("delimited_write_delim not implemented");
 }
-fn delimited_write_general_exp(s: &mut String, left: &String, right: &String, exp_list: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>){
+fn delimited_write_general_exp(s: &mut String, open: &String, close: &String, exp_list: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>){
 //     writeExp (EDelimited open close es)
 //   | all isStandardHeight es
 //   , open == "(" || open == "[" || open == "|"
@@ -448,7 +466,7 @@ fn delimited_write_general_exp(s: &mut String, left: &String, right: &String, ex
 //   isStandardHeight (Right (ESymbol ty _)) = ty `elem` [Ord, Op, Bin, Rel, Pun]
 //   isStandardHeight _ = False
     let is_open_close = 
-    match (left.as_str(), right.as_str()){
+    match (open.as_str(), close.as_str()){
         ("(", ")") => {
             true
         },
@@ -466,34 +484,91 @@ fn delimited_write_general_exp(s: &mut String, left: &String, right: &String, ex
     let is_right = is_all_right(exp_list);
     let is_standard_height = is_all_standard_height(exp_list);
     if is_open_close && is_right && is_standard_height{
-
-        s.push_str(&get_tex_math_m(left, envs));
+        s.push_str(&get_tex_math_many(open, envs));
         // TODO delimited general exp
         // mapM_ (either (writeDelim DMiddle) writeExp) es
         for exp in exp_list{
             match exp {
-                node::InEDelimited::Middle(..) => {
-                    panic!("delimited in middle not implemented");
+                node::InEDelimited::Left(delim) => {
+                    delimited_write_delim(s, FenceType::DMiddle, delim);
                 },
-                node::InEDelimited::Exp(exp) => {
+                node::InEDelimited::Right(exp) => {
                     exp.write_tex(s, envs);
                 }      
             }
         }
-        s.push_str(&get_tex_math_m(right, envs));
-    }
-
-    // write_delim
-    delimited_write_delim(s, FenceType::DLeft(), left);
-    for exp in exp_list{
-        match exp {
-            node::InEDelimited::Middle(..) => {
-                delimited_write_delim(s, FenceType::DMiddle(), delim);
-            },
-            node::InEDelimited::Exp(exp) => {
-                exp.write_tex(s, envs);
-            }      
+        s.push_str(&get_tex_math_many(close, envs));
+        return;
+    }else{
+        // writeExp (EDelimited open close es) =  do
+        // writeDelim DLeft open
+        // mapM_ (either (writeDelim DMiddle) writeExp) es
+        // writeDelim DRight close
+        delimited_write_delim(s, FenceType::DLeft, open);
+        for exp in exp_list{
+            match exp {
+                node::InEDelimited::Left(delim) => {
+                    delimited_write_delim(s, FenceType::DMiddle, delim);
+                },
+                node::InEDelimited::Right(exp) => {
+                    exp.write_tex(s, envs);
+                }      
+            }
         }
+        delimited_write_delim(s, FenceType::DRight, close);
+        return;
+    }    
+}
+
+enum Position{
+    Under,
+    Over,
+}
+fn write_script(s: &mut String, p: Position, convertible: bool, base: node::Exp, e1: node::Exp){
+    // TODO: write script
+}
+
+fn check_substack(s: &mut String, e:Exp){
+    // TODO: check substack
+}
+
+fn get_text_cmd(t: node::TextType) -> String{
+    // TODO: get text cmd
+    panic!("get_text_cmd not implemented");
+}
+
+fn xarrow(e: Exp) -> Option<Exp>{
+    // TODO: xarrow
+    panic!("xarrow not implemented");
+}
+
+// cmds which can be used with \left and \right
+fn delimiters() -> Vec<Vec<node::Exp>>{
+    // TODO: delimiters
+    panic!("delimiters not implemented");
+}
+
+// TODO: ?? what is fancy
+fn is_fancy(e: &node::Exp) -> bool{
+    match e{
+        &node::Exp::ESub(..) => true,
+        &node::Exp::ESuper(..) => true,
+        &node::Exp::ESubsup(..) => true,
+        &node::Exp::EUnder(..) => true,
+        &node::Exp::EOver(..) => true,
+        &node::Exp::EUnderOver(..) => true,
+        &node::Exp::ERoot(..) => true,
+        &node::Exp::ESqrt(..) => true,
+        &node::Exp::EPhantom(..) => true,
+        _ => false,
+    }
+}
+
+fn is_operator(e: &node::Exp) -> bool{
+    match e{
+        &node::Exp::ESymbol(node::TeXSymbolType::Op, ..) => true,
+        &node::Exp::EMathOperator(..) => true,
+        _ => false,
     }
 }
 
@@ -505,9 +580,13 @@ impl node::Exp{
             },
 
             node::Exp::EBoxed(exp) => {
-                res.push_str("\\boxed{");
-                exp.write_tex(res, envs);
-                res.push_str("}");
+                if envs["amsmath"]{
+                    res.push_str("\\boxed{");
+                    exp.write_tex(res, envs);
+                    res.push_str("}");
+                }else{
+                    exp.write_tex(res, envs);
+                }
             },
 
             node::Exp::EGrouped(exp_list) => {
@@ -545,7 +624,7 @@ impl node::Exp{
                 }
 
 
-                let escaped = get_tex_math_m(&symbol, envs);
+                let escaped = get_tex_math_many(&symbol, envs);
                 // 如果是Bin, Rel则需要添加一个空格
                 if *symbol_type == node::TeXSymbolType::Bin || *symbol_type == node::TeXSymbolType::Rel{
                     res.push_str(" ");
@@ -617,26 +696,48 @@ impl node::Exp{
             },
 
             node::Exp::EMathOperator(math_operator) => {
+                // TODO: more precise MathOperator
                 res.push_str("\\");
                 res.push_str(&math_operator);
             },
 
             node::Exp::ESub(exp1, exp2) => {
-                exp1.write_tex(res, envs);
+                if is_fancy(exp1){
+                    res.push_str("{");
+                    exp1.write_tex(res, envs);
+                    res.push_str("}");
+                }else{
+                    exp1.write_tex(res, envs);
+                }
+
                 res.push_str("_{");
                 exp2.write_tex(res, envs);
                 res.push_str("}");
             },
 
             node::Exp::ESuper(exp1, exp2) => {
-                exp1.write_tex(res, envs);
+                if is_fancy(exp1){
+                    res.push_str("{");
+                    exp1.write_tex(res, envs);
+                    res.push_str("}");
+                }else{
+                    exp1.write_tex(res, envs);
+                }
+
                 res.push_str("^{");
                 exp2.write_tex(res, envs);
                 res.push_str("}");
             },
 
             node::Exp::ESubsup(exp1, exp2, exp3) => {
-                exp1.write_tex(res, envs);
+                if is_fancy(exp1){
+                    res.push_str("{");
+                    exp1.write_tex(res, envs);
+                    res.push_str("}");
+                }else{
+                    exp1.write_tex(res, envs);
+                }
+    
                 res.push_str("_{");
                 exp2.write_tex(res, envs);
                 res.push_str("}^{");
@@ -653,7 +754,7 @@ impl node::Exp{
 
             node::Exp::EFraction(fraction_type, exp1, exp2) => {
                 res.push_str("\\");
-                res.push_str(&fraction_type.to_show());
+                res.push_str(&fraction_type.to_str());
                 res.push_str("{");
                 exp1.write_tex(res, envs);
                 res.push_str("}{");
@@ -662,8 +763,9 @@ impl node::Exp{
             },
 
             node::Exp::EText(text_type, str) => {
+                // TODO: escape string
                 res.push_str("\\");
-                res.push_str(&text_type.to_show());
+                res.push_str(&text_type.to_str());
                 res.push_str("{");
                 res.push_str(&str);
                 res.push_str("}");
@@ -671,7 +773,7 @@ impl node::Exp{
 
             node::Exp::EStyled(text_type, exp_list) => {
                 res.push_str("\\");
-                res.push_str(&text_type.to_show());
+                res.push_str(&text_type.to_str());
                 self.write_tex(res, envs);
             },
 
@@ -717,7 +819,6 @@ impl node::Exp{
                 panic!("EUnderOver not implemented");
             },
 
-
             node::Exp::ERoot(exp1, exp2) => {
                 res.push_str("\\sqrt[");
                 exp1.write_tex(res, envs);
@@ -728,15 +829,6 @@ impl node::Exp{
             node::Exp::EScaled(rational, exp) => {
                 // TODO write exp scaled
                 panic!("EScaled not implemented");
-            },
-
-            node::Exp::Right(exp) => {
-                exp.write_tex(res, envs);
-            },
-
-            node::Exp::Left(str) => {
-                // TODO write exp left
-                panic!("Left not implemented");
             },
         }
     }
@@ -771,7 +863,7 @@ impl node::Rational{
 }
 
 impl node::Alignment{
-    fn to_show(&self) -> String{
+    fn to_str(&self) -> String{
         match self{
             node::Alignment::AlignLeft => {
                 "l".to_string()
@@ -789,7 +881,7 @@ impl node::Alignment{
 }
 
 impl node::FractionType{
-    fn to_show(&self) -> String{
+    fn to_str(&self) -> String{
         match self{
             node::FractionType::NormalFrac => {
                 "frac".to_string()
@@ -811,7 +903,7 @@ impl node::FractionType{
 }
 
 impl node::TextType{
-    fn to_show(&self) -> String{
+    fn to_str(&self) -> String{
         match self{
             node::TextType::TextNormal => {
                 "text".to_string()

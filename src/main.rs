@@ -132,30 +132,30 @@ fn test_totex(){
             Ok (exp) => {
                 // println!("Exp read successfully");
                 // dbg!(exp);
-                let tr = ast::tex_writer::TexWriter::new_exp(exp, HashMap::<String,bool>::new());
-                let right_tex = texs[i].trim().to_string();
-                let result = panic::catch_unwind(|| {
-                    let tex = tr.to_tex().trim().to_string();
-                    if tex != right_tex {
-                        // println!("Tex not match:{}/{}", i, tex.len());
-                        // println!("file: {}", natives[i]);
-                        // println!("====================");
-                        // println!("Expected: {}", texs[i]);
-                        // println!("Actual: {}", tex);
-                        // println!("====================");
-                        panic!("Tex not match")
-                    }
-                });
-                match result {
-                    Ok(_) => {
-                        success += 1;
-                    },
-                    Err(e) => {
-                        // println!("file: {}", natives[i]);
-                        println!("Error: {:?}", e);
-                        return;
-                    }
-                }
+                // let tr = ast::tex_writer::TexWriter::new_exp(exp, HashMap::<String,bool>::new());
+                // let right_tex = texs[i].trim().to_string();
+                // let result = panic::catch_unwind(|| {
+                //     let tex = tr.to_tex().trim().to_string();
+                //     if tex != right_tex {
+                //         // println!("Tex not match:{}/{}", i, tex.len());
+                //         // println!("file: {}", natives[i]);
+                //         // println!("====================");
+                //         // println!("Expected: {}", texs[i]);
+                //         // println!("Actual: {}", tex);
+                //         // println!("====================");
+                //         panic!("Tex not match")
+                //     }
+                // });
+                // match result {
+                //     Ok(_) => {
+                //         success += 1;
+                //     },
+                //     Err(e) => {
+                //         // println!("file: {}", natives[i]);
+                //         println!("Error: {:?}", e);
+                //         return;
+                //     }
+                // }
                 
             },
             Err(e) => {

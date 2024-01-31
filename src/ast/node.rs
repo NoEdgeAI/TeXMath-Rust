@@ -116,8 +116,8 @@ pub struct Rational {
 
 #[derive(PartialEq, Debug)]
 pub enum InEDelimited {
-    Middle(String),
-    Exp(Exp),
+    Left(String),
+    Right(Exp),
 }
 
 pub type ArrayLines = Vec<Vec<Exp>>;
@@ -152,6 +152,4 @@ pub enum Exp{
     EScaled(Rational, Box<Exp>),
     EText(TextType, String),
     EStyled(TextType, Vec<Exp>),
-    Right(Box<Exp>),
-    Left(String), // TODO merge Left as Middle
 }

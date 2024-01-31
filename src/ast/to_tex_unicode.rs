@@ -4,9 +4,9 @@ use ahash::{AHasher};
 
 #[test]
 fn test_escapse_symbol(){
-    assert_eq!(escape_symbol_unicode("\\8722", &HashMap::new()), "-");
-    assert_eq!(escape_symbol_unicode("\\177", &HashMap::new()), "\\pm");
-    assert_eq!(escape_symbol_unicode("\\8747", &HashMap::new()), "\\int");
+    assert_eq!(escape_single_symbol_unicode("\\8722", &HashMap::new()), "-");
+    assert_eq!(escape_single_symbol_unicode("\\177", &HashMap::new()), "\\pm");
+    assert_eq!(escape_single_symbol_unicode("\\8747", &HashMap::new()), "\\int");
 }
 #[test]
 fn test_parse_unicode_escape(){
@@ -25,7 +25,7 @@ fn parse_unicode_escape(s: &str) -> Option<char> {
     char::from_u32(code_point)
 }
 
-pub fn escape_symbol_unicode(symbol: &str, envs: &HashMap<String, bool>) -> String{
+pub fn escape_single_symbol_unicode(symbol: &str, envs: &HashMap<String, bool>) -> String{
     // try base symbol
     if let Some(base) = SYMBOLS.get(("base_".to_owned() + symbol).as_str()) {
         return base.to_string();
