@@ -1,6 +1,6 @@
 pub mod node;
 pub mod tex_writer;
 
-mod env_unicode;
+mod to_tex_unicode;
 
 pub mod ast_reader;

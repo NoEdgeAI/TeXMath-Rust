@@ -120,14 +120,14 @@ pub enum InEDelimited {
     Exp(Exp),
 }
 
-type ArrayLine = Vec<Vec<Exp>>;
+pub type ArrayLines = Vec<Vec<Exp>>;
 
 #[derive(PartialEq, Debug)]
 pub enum Exp{
     ENumber(String),
     EGrouped(Vec<Exp>), // -> EGrouped[ ]
     EDelimited(String, String, Vec<InEDelimited>), // -> EDelimited[ ]
-    EArray(Vec<Alignment>, Vec<ArrayLine>), // -> EArray[ ]
+    EArray(Vec<Alignment>, Vec<ArrayLines>), // -> EArray[ ]
     EIdentifier(String),
     EMathOperator(String),
     ESymbol(TeXSymbolType, String),
@@ -153,5 +153,5 @@ pub enum Exp{
     EText(TextType, String),
     EStyled(TextType, Vec<Exp>),
     Right(Box<Exp>),
-    Left(String),
+    Left(String), // TODO merge Left as Middle
 }

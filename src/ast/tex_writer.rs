@@ -1,15 +1,43 @@
 use core::panic;
 use std::collections::HashMap;
-use std::env;
-use std::f32::consts::E;
 
 use super::node;
-use super::env_unicode;
+use super::to_tex_unicode;
+use super::node::ArrayLines;
 use super::node::Exp;
 
 pub struct TexWriter{
     e : Vec<node::Exp>,
     envs : HashMap<String, bool>,
+}
+#[test]
+fn test_tex_writer(){
+    let case = r#"
+    [ EText
+    TextNormal
+    "Inline double up down arrows, text style, thick line\160"
+, EDelimited
+    ""
+    ""
+    [ Left "\8661"
+    , Right
+        (EFraction
+           NormalFrac
+           (EGrouped
+              [ EMathOperator "sin" , ESymbol Ord "\8289" , EIdentifier "\952" ])
+           (EIdentifier "M"))
+    , Left "\8661"
+    ]
+, EText TextNormal "\160the end."
+]"#;
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
+    let exp = super::ast_reader::read_ast(case).unwrap();
+    dbg!(&exp);
+    let tex_writer: TexWriter = TexWriter::new_exp(exp, envs);
+    let tex = tex_writer.to_tex();
+    println!("{}", tex);
 }
 
 impl TexWriter {
@@ -32,13 +60,6 @@ impl TexWriter {
 
 pub trait ToTeX {
     fn to_show(&self, envs: &HashMap<String, bool>) -> String;
-}
-
-// write_group => { exp }
-fn write_group(s: &mut String, exp: &Exp, envs: &HashMap<String, bool>){
-    s.push_str("{");
-    exp.write_tex(s, envs);
-    s.push_str("}");
 }
 
 // 通用分数
@@ -77,8 +98,9 @@ fn is_all_right(exp_list: &Vec<node::InEDelimited>) -> bool{
 }
 
 // get tex math m
-// TODO
-fn get_tex_math_m(open: &str) -> String{
+// TODO escape get tex math m
+fn get_tex_math_m(open: &str, envs: &HashMap<String, bool>) -> String{
+    let open = to_tex_unicode::escape_symbol_unicode(open, envs);
     return String::from(open);
 }
 
@@ -195,48 +217,119 @@ fn write_binom(s: &mut String, control: &str, exp1: &Exp, exp2: &Exp, envs: &Has
                 panic!("writeBinom: unknown cmd");
             }
         };
-        write_group(s, exp1, envs);
+        s.push_str("{");
+        exp1.write_tex(s, envs);
+        s.push_str("}{");
+        exp2.write_tex(s, envs);
+        s.push_str("}");
     }
 }
 
-fn write_aligns_tex(s: &mut String, aligns: &Vec<node::Alignment>){
+// 输出alignments, 不带{}
+// AlignLeft -> l, AlignRight -> r, AlignCenter -> c
+fn write_alignments(s: &mut String, aligns: &Vec<node::Alignment>){
     for align in aligns{
         s.push_str(&align.to_show());
     }
 }
 
-fn write_array_rows(s: &mut String, rows: &Vec<&Vec<&node::Exp>>, envs: &HashMap<String, bool>) {
+#[test]
+fn test_write_arraylines(){
+    let case = vec![
+        vec![
+            vec![Exp::Right(Box::new(Exp::ENumber("1".to_string())))],
+            vec![Exp::Right(Box::new(Exp::ENumber("2".to_string())))],
+        ],
+        vec![
+            vec![Exp::Right(Box::new(Exp::ENumber("3".to_string())))],
+            vec![Exp::Right(Box::new(Exp::ENumber("4".to_string())))],
+        ],
+    ];
+
+    let mut s = String::new();
+    write_arraylines(&mut s, &case, &HashMap::new());
+    assert_eq!(s, "1 & 2 \\\\\n3 & 4 \\\\\n");
+}
+
+// 输出array的单个元素
+fn write_arrayline(s: &mut String, row: &Vec<node::Exp>, envs: &HashMap<String, bool>){
+    if row.len() == 0{
+        return;
+    }else if row.len() == 1{
+        row[0].write_tex(s, envs);
+        return;
+    }else{
+        panic!("writeArrayLine: multi elements not implemented")
+    }
+}
+
+
+// 输出array rows:
+// xxx & xxx & xxx \\
+fn write_arraylines(s: &mut String, rows: &Vec<ArrayLines>, envs: &HashMap<String, bool>) {
     // doRows :: [ArrayLine] -> Math ()
     // doRows []          = return ()
     // doRows ([]:[])     = tell [Token '\n']
     // doRows ([]:ls)     = tell [Space, Literal "\\\\", Token '\n'] >> doRows ls
     // doRows ([c]:ls)    = cell c >> doRows ([]:ls)
     // doRows ((c:cs):ls) = cell c >> tell [Space, Token '&', Space] >> doRows (cs:ls)
+
     if rows.len() == 0{
-        // 如果没有行，则返回空
-    }else if rows.len() == 1 && rows[0].len() == 0{
-        // 如果只有一行，且为空，则增加一个换行符
-        s.push_str("\n");
-    }else if rows[0].len() == 0 && rows.len() > 1{
-        // 如果第一行为空，且有多行，则需要添加换行符
-        s.push_str(" ");
-        s.push_str("\\\\");
-        s.push_str("\n");
-        write_array_rows(s, &rows[1..].to_vec(), envs);
-    }else if rows[0].len() == 1{
-        // 如果第一行只有一个元素，则不需要添加换行符
-        // todo
-        panic!("write_array_rows not implemented");
-    }else if rows[0].len() > 1 {
-        // 如果第一行有多个元素，则需要添加换行符
-        // todo
-        panic!("write_array_rows not implemented");
-    }else{
-        panic!("write_array_rows error");
+        return;
+    }else {
+        for row in rows{
+            for i in 0..row.len(){
+                write_arrayline(s, &row[i], envs);
+                if i != row.len() - 1{
+                    s.push_str(" & ");
+                }
+            }
+
+            if row == &rows[rows.len() - 1]{
+                continue; // 最后一行不需要输出\\
+            }
+            s.push_str(" ");
+            s.push_str("\\\\");
+            s.push_str("\n");
+        }
     }
 }
 
-fn write_array_table(s: &mut String, name: &str, aligns: &Vec<node::Alignment>, rows: &Vec<&Vec<&node::Exp>>, envs: &HashMap<String, bool>){
+// 判断是否是RL序列: 
+// RL序列是指以AlignRight开头，以AlignLeft结尾，中间可以有任意多个AlignRight和AlignLeft
+fn aligns_is_rlsequence(aligns: &Vec<node::Alignment>) -> bool{
+    // isRLSequence :: [Alignment] -> Bool
+    // isRLSequence [AlignRight, AlignLeft] = True
+    // isRLSequence (AlignRight : AlignLeft : as) = isRLSequence as
+    // isRLSequence _ = False
+    if aligns.len() % 2 == 0{
+        for align_pair in aligns.chunks(2){
+            if align_pair[0] != node::Alignment::AlignRight || align_pair[1] != node::Alignment::AlignLeft{
+                return false;
+            }
+        }
+        return true;
+    }else{
+        return false;
+    }
+}
+
+// 判断是否是全部是AlignCenter, 这样的话可以使用matrix
+fn aligns_is_all_center(aligns: &Vec<node::Alignment>) -> bool{
+    for align in aligns{
+        if align != &node::Alignment::AlignCenter{
+            return false;
+        }
+    }
+    return true;
+}
+
+// 输出array table
+// name = "array" or "matrix"...
+fn write_array_table(s: &mut String, name: &str, aligns: &Vec<node::Alignment>, rows: &Vec<ArrayLines>, envs: &HashMap<String, bool>){
+    // \begin{xxx}
+    // \begin{array}{ccc}
+
     s.push_str("\\begin{");
     s.push_str(name);
     s.push_str("}");
@@ -244,19 +337,20 @@ fn write_array_table(s: &mut String, name: &str, aligns: &Vec<node::Alignment>, 
     // if has aligns
     if aligns.len() > 0 { 
         s.push_str("{");
-        write_aligns_tex(s, aligns);
+        write_alignments(s, aligns);
         s.push_str("}");
     }
 
     s.push_str("\n");
 
-    write_array_rows(s, rows, envs);
+    write_arraylines(s, rows, envs);
 
     s.push_str("\\end{");
     s.push_str(name);
     s.push_str("}");
 }
 
+// TODO neat this function
 fn delimited_write_right_array(s: &mut String, left: &String, right: &String, exp: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>) -> bool {
     if exp.len() != 1{
         return false;
@@ -271,7 +365,7 @@ fn delimited_write_right_array(s: &mut String, left: &String, right: &String, ex
                 if let Exp::EArray(ref aligns, ref rows) = exp.as_ref(){
                     if envs["amsmath"]{
                         if(left.as_str() == "{" && right.as_str() == "") || aligns == &[node::Alignment::AlignLeft, node::Alignment::AlignLeft]{
-                            // TODO
+                            // TODO delimited write array table
                             panic!("delimited_write_right_array not implemented");
                         }
                     }
@@ -318,7 +412,7 @@ fn delimited_fraction_noline(s: &mut String, left: &String, right: &String, exp_
                         // others:
                         // writeExp (EDelimited open close [Right (EArray [AlignCenter]
                         //     [[[x]],[[y]]])])
-                        // TODO 
+                        // TODO delimited write right array
                         panic!("delimited_fraction_noline not implemented");
                     }
                 }
@@ -327,7 +421,16 @@ fn delimited_fraction_noline(s: &mut String, left: &String, right: &String, exp_
     }
     return false;
 }
-
+enum FenceType{
+    DLeft(),
+    DMiddle(),
+    DRight(),
+}
+fn delimited_write_delim(s: &mut String, ft: FenceType, delim: &str){
+    // TODO: escape string
+    // TODO: valid delim
+    panic!("delimited_write_delim not implemented");
+}
 fn delimited_write_general_exp(s: &mut String, left: &String, right: &String, exp_list: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>){
 //     writeExp (EDelimited open close es)
 //   | all isStandardHeight es
@@ -364,8 +467,8 @@ fn delimited_write_general_exp(s: &mut String, left: &String, right: &String, ex
     let is_standard_height = is_all_standard_height(exp_list);
     if is_open_close && is_right && is_standard_height{
 
-        s.push_str(&get_tex_math_m(left));
-        // TODO
+        s.push_str(&get_tex_math_m(left, envs));
+        // TODO delimited general exp
         // mapM_ (either (writeDelim DMiddle) writeExp) es
         for exp in exp_list{
             match exp {
@@ -377,7 +480,20 @@ fn delimited_write_general_exp(s: &mut String, left: &String, right: &String, ex
                 }      
             }
         }
-        s.push_str(&get_tex_math_m(right));
+        s.push_str(&get_tex_math_m(right, envs));
+    }
+
+    // write_delim
+    delimited_write_delim(s, FenceType::DLeft(), left);
+    for exp in exp_list{
+        match exp {
+            node::InEDelimited::Middle(..) => {
+                delimited_write_delim(s, FenceType::DMiddle(), delim);
+            },
+            node::InEDelimited::Exp(exp) => {
+                exp.write_tex(s, envs);
+            }      
+        }
     }
 }
 
@@ -395,7 +511,11 @@ impl node::Exp{
             },
 
             node::Exp::EGrouped(exp_list) => {
-                write_group(res, self, envs);
+                res.push_str("{");
+                for exp in exp_list{
+                    exp.write_tex(res, envs);
+                }
+                res.push_str("}");
             },
 
             node::Exp::EDelimited(left, right, exp_list) => {
@@ -414,17 +534,28 @@ impl node::Exp{
             },
 
             node::Exp::ESymbol(symbol_type, symbol) => {
-                let escaped = env_unicode::escape_symbol(&symbol, envs);
+                // writeExp (ESymbol Ord (T.unpack -> [c]))  -- do not render "invisible operators"
+                //   | c `elem` ['\x2061'..'\x2064'] = return () -- see 3.2.5.5 of mathml spec
+
+                if symbol_type == &node::TeXSymbolType::Ord && symbol.len() == 1{
+                    let c = symbol.chars().next().unwrap();
+                    if c >= '\u{2061}' && c <= '\u{2064}'{
+                        return;
+                    }
+                }
+
+
+                let escaped = get_tex_math_m(&symbol, envs);
                 // 如果是Bin, Rel则需要添加一个空格
                 if *symbol_type == node::TeXSymbolType::Bin || *symbol_type == node::TeXSymbolType::Rel{
                     res.push_str(" ");
                 }
 
                 res.push_str(&escaped);
-                // TODO
+                // TODO symbol escape
                 // if symbol.len() > 1 && (symbol_type == &node::TeXSymbolType::Bin || symbol_type == &node::TeXSymbolType::Rel || symbol_type == &node::TeXSymbolType::Op) {
                 //     s.push_str("\\math");
-                //     s.push_str(symbol_type.to_show().as_str()); // TODO
+                //     s.push_str(symbol_type.to_show().as_str());
                 //     s.push_str("{");
                     
                 //     s.push_str("\\text{");
@@ -460,11 +591,11 @@ impl node::Exp{
                         res.push_str("\\;");
                     },
                     18 => {
-                        // TODO why here is need a space?
+                        // TODO ESpace: why here is need a space?
                         res.push_str("\\quad ");
                     },
                     36 => {
-                        // TODO why here is need a space?
+                        // TODO ESpace: why here is need a space?
                         res.push_str("\\qquad ");
                     },
                     n => {
@@ -515,20 +646,27 @@ impl node::Exp{
 
             node::Exp::ESqrt(exp) => {
                 res.push_str("\\sqrt");
-                write_group(res, exp, envs);
+                res.push_str("{");
+                exp.write_tex(res, envs);
+                res.push_str("}");
             },
 
             node::Exp::EFraction(fraction_type, exp1, exp2) => {
                 res.push_str("\\");
                 res.push_str(&fraction_type.to_show());
-                write_group(res, exp1, envs);
-                write_group(res, exp2, envs);
+                res.push_str("{");
+                exp1.write_tex(res, envs);
+                res.push_str("}{");
+                exp2.write_tex(res, envs);
+                res.push_str("}");
             },
 
             node::Exp::EText(text_type, str) => {
                 res.push_str("\\");
                 res.push_str(&text_type.to_show());
-                write_group(res, self, envs);
+                res.push_str("{");
+                res.push_str(&str);
+                res.push_str("}");
             },
 
             node::Exp::EStyled(text_type, exp_list) => {
@@ -539,26 +677,43 @@ impl node::Exp{
 
             node::Exp::EPhantom(exp) => {
                 res.push_str("\\phantom");
-                write_group(res, exp, envs);
+                res.push_str("{");
+                exp.write_tex(res, envs);
+                res.push_str("}");
             },
 
             node::Exp::EArray(alignments, exp_lists) => {
-                // TODO
-                panic!("EArray not implemented");
+                if aligns_is_rlsequence(alignments){
+                    if envs["amsmath"]{
+                        write_array_table(res, "aligned",&Vec::<node::Alignment>::new(), exp_lists, envs);
+                        return;
+                    }else{
+                        write_array_table(res, "array", alignments, exp_lists, envs);
+                        return;
+                    }
+                }
+
+                if envs["amsmath"] && aligns_is_all_center(alignments){
+                    write_array_table(res, "matrix", &Vec::<node::Alignment>::new(), exp_lists, envs);
+                    return;
+                }else{
+                    write_array_table(res, "array", alignments, exp_lists, envs);
+                    return;
+                }
             },
 
             node::Exp::EOver(is_over, exp1, exp2) => {
-                // TODO
+                // TODO write exp over
                 panic!("EOver not implemented");
             },
 
             node::Exp::EUnder(is_under, exp1, exp2) => {
-                // TODO
+                // TODO write exp under
                 panic!("EUnder not implemented");
             },
 
             node::Exp::EUnderOver(is_under_over, exp1, exp2, exp3) => {
-                // TODO
+                // TODO write exp under over
                 panic!("EUnderOver not implemented");
             },
 
@@ -571,7 +726,7 @@ impl node::Exp{
             },
 
             node::Exp::EScaled(rational, exp) => {
-                // TODO
+                // TODO write exp scaled
                 panic!("EScaled not implemented");
             },
 
@@ -580,7 +735,7 @@ impl node::Exp{
             },
 
             node::Exp::Left(str) => {
-                // TODO
+                // TODO write exp left
                 panic!("Left not implemented");
             },
         }
