@@ -386,9 +386,9 @@ fn delimited_write_right_array(s: &mut String, open: &String, close: &String, ex
                     }
                 }
                 // 以上都不是，那么就是一个普通的array
-                delimited_write_delim(s, FenceType::DLeft, &open);
+                delimited_write_delim(s, FenceType::DLeft, &open, envs);
                 exp.write_tex(s, envs); // TODO: write array is ?
-                delimited_write_delim(s, FenceType::DRight, &close);
+                delimited_write_delim(s, FenceType::DRight, &close, envs);
             }
         }
     }
@@ -444,10 +444,59 @@ enum FenceType{
     DMiddle,
     DRight,
 }
-fn delimited_write_delim(s: &mut String, ft: FenceType, delim: &str){
-    // TODO: escape string
-    // TODO: valid delim
-    panic!("delimited_write_delim not implemented");
+
+fn is_delimiters(s: &str, envs: &HashMap<String, bool>) -> bool{
+    let cmds = vec![ ".", "(", ")", "[", "]", "|", "\x2016", "{", "}"
+    , "\u{2309}", "\u{2308}", "\u{2329}", "\u{232A}"
+    , "\u{230B}", "\u{230A}", "\u{231C}", "\u{231D}"];
+    // TODO: 对envs的每个环境都生成一个列表, 再判断s是否在列表中
+    // 这里仅仅判断了最基本的情况
+    if cmds.contains(&s){
+        return true;
+    }
+    return false;
+}
+
+fn delimited_write_delim(s: &mut String, ft: FenceType, delim: &str, envs: &HashMap::<String, bool>){
+    let tex_delim = get_tex_math_many(s, envs);
+    let valid = is_delimiters(s, envs); // 界定符号是否有效
+    let null_lim = get_tex_math_many(".", envs); // TODO: 空的界定符号
+
+    let delim_cmd = match valid {
+        true => tex_delim.clone(),
+        false => null_lim,
+    }; // 如果有效则使用tex_delim, 否则使用null_lim(空的界定符号)
+
+    match ft {
+        FenceType::DLeft => {
+            // valid: \left( 
+            // invalid: \left. tex
+            s.push_str("\\left");
+            s.push_str(&delim_cmd);
+            s.push_str(" ");
+            if !valid {
+                s.push_str(&tex_delim);
+            }
+        },
+        FenceType::DMiddle => {
+            if valid{
+                s.push_str(" ");
+                s.push_str("\\middle");
+                s.push_str(&delim_cmd);
+                s.push_str(" ");
+            }else{
+                s.push_str(&tex_delim);
+            }
+        },
+        FenceType::DRight => {
+            s.push_str(" ");
+            s.push_str("\\right");
+            s.push_str(&delim_cmd);
+            if !valid {
+                s.push_str(&tex_delim);
+            }
+        },
+    }
 }
 fn delimited_write_general_exp(s: &mut String, open: &String, close: &String, exp_list: &Vec<node::InEDelimited>, envs: &HashMap::<String, bool>){
 //     writeExp (EDelimited open close es)
@@ -490,7 +539,7 @@ fn delimited_write_general_exp(s: &mut String, open: &String, close: &String, ex
         for exp in exp_list{
             match exp {
                 node::InEDelimited::Left(delim) => {
-                    delimited_write_delim(s, FenceType::DMiddle, delim);
+                    delimited_write_delim(s, FenceType::DMiddle, delim, envs);
                 },
                 node::InEDelimited::Right(exp) => {
                     exp.write_tex(s, envs);
@@ -504,18 +553,18 @@ fn delimited_write_general_exp(s: &mut String, open: &String, close: &String, ex
         // writeDelim DLeft open
         // mapM_ (either (writeDelim DMiddle) writeExp) es
         // writeDelim DRight close
-        delimited_write_delim(s, FenceType::DLeft, open);
+        delimited_write_delim(s, FenceType::DLeft, open, envs);
         for exp in exp_list{
             match exp {
                 node::InEDelimited::Left(delim) => {
-                    delimited_write_delim(s, FenceType::DMiddle, delim);
+                    delimited_write_delim(s, FenceType::DMiddle, delim, envs);
                 },
                 node::InEDelimited::Right(exp) => {
                     exp.write_tex(s, envs);
                 }      
             }
         }
-        delimited_write_delim(s, FenceType::DRight, close);
+        delimited_write_delim(s, FenceType::DRight, close, envs);
         return;
     }    
 }
@@ -524,7 +573,7 @@ enum Position{
     Under,
     Over,
 }
-fn write_script(s: &mut String, p: Position, convertible: bool, base: node::Exp, e1: node::Exp){
+fn write_script(s: &mut String, p: &Position, convertible: &bool, base: &node::Exp, e1: &node::Exp){
     // TODO: write script
 }
 
@@ -537,15 +586,9 @@ fn get_text_cmd(t: node::TextType) -> String{
     panic!("get_text_cmd not implemented");
 }
 
-fn xarrow(e: Exp) -> Option<Exp>{
-    // TODO: xarrow
+fn xarrow(e: &node::Exp) -> Option<String>{
+    // TODO: 将Symbol Op转换为对应的xarrow控制序列
     panic!("xarrow not implemented");
-}
-
-// cmds which can be used with \left and \right
-fn delimiters() -> Vec<Vec<node::Exp>>{
-    // TODO: delimiters
-    panic!("delimiters not implemented");
 }
 
 // TODO: ?? what is fancy
@@ -804,19 +847,28 @@ impl node::Exp{
                 }
             },
 
-            node::Exp::EOver(is_over, exp1, exp2) => {
-                // TODO write exp over
-                panic!("EOver not implemented");
+            node::Exp::EOver(convertible, b, e1) => {
+                match xarrow(b){
+                    Some(exp) => {
+                        if envs["amsmath"]{
+                            res.push_str(exp.as_str());
+                            res.push_str("{");
+                            e1.write_tex(res, envs);
+                            res.push_str("}");
+                        }
+                    },
+                    None => {
+                        write_script(res, &Position::Over, convertible, b,e1);
+                    }
+                };
             },
 
-            node::Exp::EUnder(is_under, exp1, exp2) => {
-                // TODO write exp under
-                panic!("EUnder not implemented");
+            node::Exp::EUnder(convertible, base, e1) => {
+                write_script(res, &Position::Under, convertible, base, e1);
             },
 
-            node::Exp::EUnderOver(is_under_over, exp1, exp2, exp3) => {
-                // TODO write exp under over
-                panic!("EUnderOver not implemented");
+            node::Exp::EUnderOver(convertible, b, e1, e2) => {
+                
             },
 
             node::Exp::ERoot(exp1, exp2) => {
