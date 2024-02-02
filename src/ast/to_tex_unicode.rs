@@ -3,12 +3,6 @@ use lazy_static::lazy_static;
 use ahash::{AHasher};
 
 #[test]
-fn test_escapse_symbol(){
-    assert_eq!(escape_single_symbol_unicode("\\8722", &HashMap::new()), "-");
-    assert_eq!(escape_single_symbol_unicode("\\177", &HashMap::new()), "\\pm");
-    assert_eq!(escape_single_symbol_unicode("\\8747", &HashMap::new()), "\\int");
-}
-#[test]
 fn test_parse_unicode_escape(){
     println!("{:?}", parse_unicode_escape("\\65024"));
 }
@@ -25,14 +19,113 @@ fn parse_unicode_escape(s: &str) -> Option<char> {
     char::from_u32(code_point)
 }
 
-pub fn escape_single_symbol_unicode(symbol: &str, envs: &HashMap<String, bool>) -> String{
+#[derive(Debug)]
+enum CharType {
+    Unicode(String),
+    Escape(char),
+    Normal(char),
+}
+
+#[test]
+fn test_spilt_str(){
+    let case = "a\\n\\t\\r\\f\\v\\8722\\177\\8747";
+    let res = spilt_str(case);
+    println!("{:?}", res);
+}
+// 把长串的text转换为码点:
+// 码点分3种:
+// 1. unicode码点, \d{1~5} -> \12345
+// 2. 转义字符, \n \t \r ... -> 转义输出
+// 3. 普通字符, a b c -> 直接输出
+fn spilt_str(s: &str) -> Vec<CharType>{
+    let mut res = Vec::new();
+    let mut i = 0;
+    while i < s.len() {
+        let c = s.chars().nth(i).unwrap();
+        if c == '\\' {
+            let next = s.chars().nth(i + 1).unwrap();
+            if next.is_ascii_digit() {
+                let mut j = i + 1;
+                while j < s.len() && s.chars().nth(j).unwrap().is_ascii_digit() {
+                    j += 1;
+                }
+                // \d{1~5} -> \12345
+                res.push(CharType::Unicode(s[i ..j].to_string()));
+                i = j;
+            }else{
+                res.push(CharType::Escape(next));
+                i += 2;
+            }
+        }else{
+            res.push(CharType::Normal(c));
+            i += 1;
+        }
+    }
+    res
+}
+
+fn escape_char(c: char) -> String{
+    match c {
+        'n' => "\\n".to_string(),
+        't' => "\\t".to_string(),
+        'r' => "\\r".to_string(),
+        '"' => "\\f".to_string(),
+        '\'' => "\\v".to_string(),
+        '\\' => "\\\\".to_string(),
+        _ => panic!("unknown escape char: {}", c)
+    }
+}
+
+#[test]
+fn test_get_math_tex_many(){
+    let s = "a\\n\\t\\r\\8722\\177\\8747, hello, i am \\65024";
+    let envs = HashMap::new();
+    let res = get_math_tex_many(s, &envs);
+    dbg!(&res);
+    println!("{:?}", res.as_bytes());
+    assert_eq!(res, "a\\n\\t\\r-\\pm\\int, hello, i am \u{fe00}");
+
+    let s = "Consider the equation\\160";
+    let want = "Consider the equation~";
+    let res = get_math_tex_many(s, &envs);
+    dbg!(&res);
+    assert_eq!(res, want);
+}
+// 转换字符串为tex格式
+pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
+    let mut res = String::new();
+    let chars = spilt_str(s);
+    for c in chars {
+        match c {
+            CharType::Unicode(num) => {
+                res.push_str(&to_unicode(&num, envs));
+            },
+            CharType::Escape(c) => {
+                res.push_str(&escape_char(c));
+            },
+            CharType::Normal(c) => {
+                res.push(c);
+            }
+        }
+    }
+    res
+}
+
+#[test]
+fn test_escapse_symbol(){
+    assert_eq!(to_unicode("\\8722", &HashMap::new()), "-");
+    assert_eq!(to_unicode("\\177", &HashMap::new()), "\\pm");
+    assert_eq!(to_unicode("\\8747", &HashMap::new()), "\\int");
+}
+
+fn to_unicode(symbol: &str, envs: &HashMap<String, bool>) -> String{
     // try base symbol
-    if let Some(base) = SYMBOLS.get(("base_".to_owned() + symbol).as_str()) {
+    if let Some(base) = tex_table.get(("base_".to_owned() + symbol).as_str()) {
         return base.to_string();
     }else{
         // try other envs
         for (env, _) in envs {
-            if let Some(base) = SYMBOLS.get((env.to_owned() + "_" + symbol).as_str()) {
+            if let Some(base) = tex_table.get((env.to_owned() + "_" + symbol).as_str()) {
                 return base.to_string();
             }
         }
@@ -66,7 +159,7 @@ fn read_csv(path: &str) -> Result<Vec<KeyVal>, Box<dyn std::error::Error>> {
 }
 
 lazy_static! {
-    static ref SYMBOLS: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
+    static ref tex_table: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
         // TODO: use config file
         let path = r#"E:\Code\Rust\texmath\src\ast\to_tex_unicode_table.csv"#;
         let key_vals = read_csv(path).expect("not found csv file, please check path");

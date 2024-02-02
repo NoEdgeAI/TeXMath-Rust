@@ -1,13 +1,13 @@
 "base_!","!"
 "unicode-math_!","\exclam"
 "base_#","\#"
-"oz_#","\#"
+"oz_#",\#
 "unicode-math_#","\octothorpe"
 "base_$","\$"
-"base_$","\mathdollar"
-"unicode-math_$","\mathdollar"
+"base_$",\mathdollar
+unicode-math_$,"\mathdollar"
 "base_%","\%"
-"unicode-math_%","\percent"
+"unicode-math_%",\percent
 "base_&","\&"
 "stmaryrd_&","\binampersand"
 "unicode-math_&","\ampersand"
@@ -628,7 +628,6 @@
 "base_\8593","\uparrow"
 "unicode-math_\8593","\uparrow"
 "base_\8594","\rightarrow"
-"base_\8594","\to"
 "unicode-math_\8594","\rightarrow"
 "base_\8595","\downarrow"
 "unicode-math_\8595","\downarrow"

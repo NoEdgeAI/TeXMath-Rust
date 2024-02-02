@@ -1,11 +1,8 @@
 use std::collections::HashMap;
-use std::f32::consts::E;
 use std::{fs, panic};
 use std::path::Path;
 use std::io;
-
 mod ast;
-use std::thread::panicking;
 use std::time::Instant;
 
 use crate::ast::ast_reader;
@@ -69,7 +66,10 @@ fn test_read_tex(){
     println!("{} files parsed successfully", i);
     println!("Time elapsed: {}ms", now.elapsed().as_millis());
 }
-fn read_dir_files(dir: &Path) -> io::Result<(Vec<String>, Vec<String>)> {
+
+// filename, native, tex
+fn read_dir_files(dir: &Path) -> io::Result<(Vec<String>, Vec<String>, Vec<String>)> {
+    let mut filenames = Vec::new();
     let mut natives = Vec::new();
     let mut texs = Vec::new();
 
@@ -101,6 +101,9 @@ fn read_dir_files(dir: &Path) -> io::Result<(Vec<String>, Vec<String>)> {
                                 panic!("empty tex");
                             }
                             texs.push(extracted.trim().to_string());
+
+                            // 文件名
+                            filenames.push(path.file_name().unwrap().to_str().unwrap().to_string());
                         }
                     }
                 },
@@ -109,10 +112,12 @@ fn read_dir_files(dir: &Path) -> io::Result<(Vec<String>, Vec<String>)> {
         }
     }
 
-    Ok((natives, texs))
+    Ok((filenames, natives, texs))
 }
 fn test_totex(){
     let dir = "./src/tex"; // 使用当前目录，你可以改为任意目录路径
+
+
     let res = read_dir_files(Path::new(dir)); // 读取目录下所有文件
     match res {
         Err(e) => {
@@ -122,47 +127,73 @@ fn test_totex(){
         _ => {}
     }
 
-    let (natives, texs) = res.unwrap();
+    let (filenames, natives, texs) = res.unwrap();
+    
     println!("{} files found, start testing", natives.len());
     
     let mut success = 0;
     let now = Instant::now();
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
     for i in 0..natives.len() {
         match ast_reader::read_ast(&natives[i]) {
             Ok (exp) => {
-                // println!("Exp read successfully");
+                println!("Exp read successfully");
                 // dbg!(exp);
-                // let tr = ast::tex_writer::TexWriter::new_exp(exp, HashMap::<String,bool>::new());
-                // let right_tex = texs[i].trim().to_string();
-                // let result = panic::catch_unwind(|| {
-                //     let tex = tr.to_tex().trim().to_string();
-                //     if tex != right_tex {
-                //         // println!("Tex not match:{}/{}", i, tex.len());
-                //         // println!("file: {}", natives[i]);
-                //         // println!("====================");
-                //         // println!("Expected: {}", texs[i]);
-                //         // println!("Actual: {}", tex);
-                //         // println!("====================");
-                //         panic!("Tex not match")
-                //     }
-                // });
-                // match result {
-                //     Ok(_) => {
-                //         success += 1;
-                //     },
-                //     Err(e) => {
-                //         // println!("file: {}", natives[i]);
-                //         println!("Error: {:?}", e);
-                //         return;
-                //     }
-                // }
+                let tex = ast::tex_writer::write_tex_with_env(exp, &envs);
+                let right_tex = texs[i].trim().to_string();
+                let result = panic::catch_unwind(|| {
+                    println!("===============================");
+                    println!("filename=======================");
+                    println!("\n{}\n", filenames[i]);
+                    println!("===============================");
+                    println!("native=========================");
+                    println!("\n{}\n", natives[i]);
+                    println!("===============================");
+                    println!("tex============================");
+                    println!("\n{}\n", tex);
+                    println!("right_tex======================");
+                    println!("\n{}\n", right_tex);
+                    assert_eq!(tex, right_tex);
+                });
+                match result {
+                    Ok(_) => {
+                        success += 1;
+                    },
+                    Err(e) => {
+                        // panic: assertion failed
+                        println!("===============================");
+                        println!("filename=======================");
+                        println!("\n{}\n", filenames[i]);
+                        println!("===============================");
+                        println!("native=========================");
+                        println!("\n{}\n", natives[i]);
+                        println!("===============================");
+                        println!("tex============================");
+                        println!("\n{}\n", texs[i]);
+                        println!("err============================");
+                        dbg!("{:?}", e);
+                        return;
+                    }
+                }
                 
             },
             Err(e) => {
+                // read_ast error
                 println!("read_ast error: {}/{}", i, natives.len());
-                println!("====================");
-                // println!("file: {}", natives[i]);
+                println!("===============================");
+                println!("filename=======================");
+                println!("\n{}\n", filenames[i]);
+                println!("===============================");
+                println!("native=========================");
+                println!("\n{}\n", natives[i]);
+                println!("===============================");
+                println!("tex============================");
+                println!("\n{}\n", texs[i]);
+                println!("===============================");
                 println!("Parse error: {:?}", e);
+                println!("===============================");
                 return;
             }
         }
@@ -171,7 +202,7 @@ fn test_totex(){
     println!("{}/{} files parsed successfully", success, natives.len());
 }
 
-fn main() -> std::io::Result<()> {
-    test_read_tex();
+fn main() -> io::Result<()> {
+    test_totex();
     Ok(())
 }

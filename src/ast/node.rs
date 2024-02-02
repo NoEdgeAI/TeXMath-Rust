@@ -56,7 +56,7 @@ Alignment = AlignLeft | AlignRight | AlignCenter
 
 // 定义所有的节点
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum TeXSymbolType {
     Ord,
     Op,
@@ -74,7 +74,7 @@ pub enum TeXSymbolType {
     Rad,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum TextType {
     TextNormal,
     TextBold,
@@ -92,7 +92,7 @@ pub enum TextType {
     TextSansSerifItalic,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum FractionType {
     NormalFrac,
     DisplayFrac,
@@ -100,21 +100,21 @@ pub enum FractionType {
     NoLineFrac,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Alignment {
     AlignLeft,
     AlignRight,
     AlignCenter,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Rational {
     // Rational numerator denominator
     pub numerator: i32,
     pub denominator: i32,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum InEDelimited {
     Left(String),
     Right(Exp),
@@ -122,16 +122,20 @@ pub enum InEDelimited {
 
 pub type ArrayLines = Vec<Vec<Exp>>;
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum Exp{
-    ENumber(String),
     EGrouped(Vec<Exp>), // -> EGrouped[ ]
     EDelimited(String, String, Vec<InEDelimited>), // -> EDelimited[ ]
     EArray(Vec<Alignment>, Vec<ArrayLines>), // -> EArray[ ]
+
+    ENumber(String),
     EIdentifier(String),
+
     EMathOperator(String),
     ESymbol(TeXSymbolType, String),
+
     ESpace(Rational),
+
     // super and sub
     ESub(Box<Exp>, Box<Exp>),
     ESubsup(Box<Exp>, Box<Exp>, Box<Exp>),
@@ -141,14 +145,15 @@ pub enum Exp{
     EOver(bool, Box<Exp>, Box<Exp>),
     EUnder(bool, Box<Exp>, Box<Exp>),
     EUnderOver(bool, Box<Exp>, Box<Exp>, Box<Exp>),
+    // fraction
+    EFraction(FractionType, Box<Exp>, Box<Exp>),
+    ERoot(Box<Exp>, Box<Exp>),
+    ESqrt(Box<Exp>),
 
     EPhantom(Box<Exp>),
     EBoxed(Box<Exp>),
 
-    EFraction(FractionType, Box<Exp>, Box<Exp>),
-    ERoot(Box<Exp>, Box<Exp>),
-    ESqrt(Box<Exp>),
-    
+    // 文本
     EScaled(Rational, Box<Exp>),
     EText(TextType, String),
     EStyled(TextType, Vec<Exp>),
