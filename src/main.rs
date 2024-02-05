@@ -152,9 +152,10 @@ fn test_totex(){
                     println!("\n{}\n", natives[i]);
                     println!("===============================");
                     println!("tex============================");
-                    println!("\n{}\n", tex);
+                    println!("\n{:?}\n", tex);
                     println!("right_tex======================");
                     println!("\n{}\n", right_tex);
+                    let tex = tex.unwrap();
                     assert_eq!(tex, right_tex);
                 });
                 match result {
