@@ -77,6 +77,7 @@ pub fn judge_by_texmath(right_tex: String, test_tex: String) -> (bool, String){
     if res.status() != 200{
         println!("status: {}", res.status());
         println!("headers: {:#?}", res.headers());
+        println!("json: {:#?}", json);
         return (false, "".to_string())
     }
     let body = res.text().unwrap();
@@ -357,7 +358,8 @@ fn delimited_fraction_noline(c: &mut TexWriterContext, left: &String, right: &St
             // \\brace
             write_binom(c, "\\brace", frac_exp1, frac_exp2)?;
         },
-        ("\u{27E8}", "\u{27E9}") => {
+        // 左右尖括号
+        ("\\10216", "\\10217") => {
             // \\bangle
             write_binom(c, "\\bangle", frac_exp1, frac_exp2)?;
         },
@@ -441,7 +443,7 @@ fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &
             ("[", "]") => {
                 true
             },
-            ("{", "}") => {
+            ("|", "|") => {
                 true
             },
             _ => {
@@ -528,7 +530,7 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
 }
 
 // 在underover中其中一个是accent时调用
-fn write_underover_accent(c: &mut TexWriterContext, exp: &Exp) -> bool{
+fn write_underover_accent(c: &mut TexWriterContext, exp: &Exp) -> Result<bool, String>{
     // (EUnderover convertible b e1@(ESymbol Accent _) e2) -> (EUnder convertible (EOver False b e2) e1)
     // (EUnderover convertible b e1 e2@(ESymbol Accent _)) -> (EOver convertible (EUnder False b e1) e2)
 
@@ -546,8 +548,8 @@ fn write_underover_accent(c: &mut TexWriterContext, exp: &Exp) -> bool{
                     Box::new(new_under_base),
                     (*e1).clone()
                 );
-                write_exp(c, &new_under);
-                return true;
+                write_exp(c, &new_under)?;
+                return Ok(true);
             }else if let Exp::ESymbol(TeXSymbolType::Accent,_) = **e2 {
                 // e2是accent
                 let new_over_base = Exp::EOver(
@@ -560,13 +562,13 @@ fn write_underover_accent(c: &mut TexWriterContext, exp: &Exp) -> bool{
                     Box::new(new_over_base),
                     (*e2).clone()
                 );
-                write_exp(c, &new_over);
-                return true;
+                write_exp(c, &new_over)?;
+                return Ok(true);
             }
-            false
+            Ok(false)
         },
         _ => {
-            false
+            Ok(false)
         }
     }
 }
@@ -1120,10 +1122,22 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
 
         Exp::EUnderOver(convertible, b, e1, e2) => {
             c.last_control = false;
+
+            // (EUnderover convertible b e1@(ESymbol Accent _) e2)
+            // (EUnderover convertible b e1 e2@(ESymbol Accent _))
+
             // 特殊处理Accent重音符号
-            if write_underover_accent(c, b){
-                return Ok(());
-            }
+            match write_underover_accent(c, b) {
+                Ok(true) => {
+                    return Ok(());
+                },
+                Err(e) => {
+                    return Err(e);
+                },
+                _ => {
+                    // go to below
+                }
+            };
 
             match get_xarrow(b){
                 Some(e) =>{

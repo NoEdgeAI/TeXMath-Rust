@@ -122,7 +122,7 @@ fn read_dir_files(dir: &Path) -> io::Result<(Vec<String>, Vec<String>, Vec<Strin
     Ok((filenames, natives, texs))
 }
 fn test_totex(){
-    let dir = "./src/test";
+    let dir = "./src/tex";
 
     let res = read_dir_files(Path::new(dir)); // 读取目录下所有文件
     match res {

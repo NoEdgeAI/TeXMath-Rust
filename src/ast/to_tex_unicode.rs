@@ -7,7 +7,7 @@ fn test_parse_unicode_escape(){
     println!("{:?}", parse_unicode_escape("\\65024"));
 }
 // parse unicode escape: "\\8481" -> "℡"
-fn parse_unicode_escape(s: &str) -> Option<char> {
+pub(crate) fn parse_unicode_escape(s: &str) -> Option<char> {
     // if s == "\\65024"{
     //     return Some('︀');
     // }

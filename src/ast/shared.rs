@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use ahash::{AHasher};
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
+use super::to_tex_unicode::parse_unicode_escape;
 /*
 [ ("\x00B4", "\\acute")
 , ("\x0301", "\\acute")
@@ -39,8 +40,22 @@ use std::hash::BuildHasherDefault;
 , ("\x0333", "\\underbar")
 ]
 */
-
+#[test]
+fn test_get_diacriticals(){
+    let case = "\\8254";
+    let res = get_diacriticals(case);
+    print!("{:?}", res);
+    assert_eq!(res, Some("\\bar".to_string()));
+}
 pub fn get_diacriticals(s: &str) -> Option<String>{
+    let spilted: Vec<char> = s.chars().collect();
+    if spilted.len() >= 2 && spilted[0] == '\\' && spilted[spilted.len() - 1].is_ascii_digit(){
+        // \d, 转换为unicode
+        let res = parse_unicode_escape(s);
+        if let Some(v) = res{
+            return get_diacriticals(&v.to_string());
+        }
+    }
     if let Some(v) = diacriticals_table.get(s){
         Some(v.to_string())
     }else{
