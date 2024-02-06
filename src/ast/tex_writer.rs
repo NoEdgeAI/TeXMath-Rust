@@ -2,6 +2,8 @@ use core::panic;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use super::{node, shared};
 use super::to_tex_unicode;
 use super::node::{Exp, Alignment, ArrayLines, TextType, TeXSymbolType, FractionType, InEDelimited, Rational};
@@ -39,6 +41,55 @@ fn test_tex_writer(){
 }
 
 #[test]
+fn test_judge_by_texmath(){
+    let test_tex = r#"
+f(x) = \begin{cases}
+1 &  - 1 \le x < 0 \\
+\frac{1}{2} & x = 0 \\
+1 - x^{2} & \text{otherwise}
+\end{cases}
+    "#;
+    let right_tex = r#"
+f(x) = \begin{cases}
+1 & - 1 \leq x < 0 \\
+\frac{1}{2} & x = 0 \\
+1 - x^{2} & \text{otherwise}
+\end{cases}
+    "#;
+    let (flag, res) = judge_by_texmath(right_tex.to_string(), test_tex.to_string());
+    assert_eq!(flag, true);
+    println!("res: \n{}", res);
+}
+pub fn judge_by_texmath(right_tex: String, test_tex: String) -> (bool, String){
+    let json = json!(
+        {
+            "display": false,
+            "from": "tex",
+            "to": "tex",
+            "text": test_tex
+        }
+    );
+    let client = reqwest::blocking::Client::new();
+    let res = client.post("http://localhost:3000/convert")
+        .json(&json).send().unwrap();
+    // println!("status: {}", res.status());
+    // println!("headers: {:#?}", res.headers());
+    if res.status() != 200{
+        println!("status: {}", res.status());
+        println!("headers: {:#?}", res.headers());
+        return (false, "".to_string())
+    }
+    let body = res.text().unwrap();
+    let body = body.trim().to_string().replace("\r", "");
+    let right_tex = right_tex.trim().to_string().replace("\r", "");
+    // println!("A: {:?}", body.as_bytes());
+    // println!("B: {:?}", right_tex.as_bytes());
+    if body == right_tex{
+        return (true, body);
+    }
+    return (false, body);
+}
+#[test]
 fn test_text_writer_file(){
     let path = "ast";
     let file_content = fs::read_to_string(path).unwrap();
@@ -54,7 +105,6 @@ fn test_text_writer_file(){
         o_tex = file_content[end + ">>> tex".len()..].to_string().trim().to_string();
     }
 
-
     let exp = super::ast_reader::read_ast(&native).unwrap();
     let mut envs = HashMap::new();
     envs.insert("amsmath".to_string(), true);
@@ -63,21 +113,32 @@ fn test_text_writer_file(){
     
     let f = fs::File::create("./output").unwrap();
     let mut f = std::io::BufWriter::new(f);
-    let same = tex == o_tex;
+    let (same, texmath) = judge_by_texmath(o_tex.clone(), tex.clone());
+    println!("A: {:?}", tex.as_bytes());
+    println!("B: {:?}", o_tex.as_bytes());
+    println!("C: {:?}", texmath.as_bytes());
+
     println!("same: {}", same);
+
     f.write("same:".as_bytes()).unwrap();
     f.write(same.to_string().as_bytes()).unwrap();
     f.write("\n\n".as_bytes()).unwrap();
+
     f.write("ast:\n".as_bytes()).unwrap();
     f.write(native.as_bytes()).unwrap();
     f.write("\n\n".as_bytes()).unwrap();
+
     f.write("tex:\n".as_bytes()).unwrap();
     f.write(tex.as_bytes()).unwrap();
     f.write("\n\n".as_bytes()).unwrap();
+
     f.write("expect:\n".as_bytes()).unwrap();
     f.write(o_tex.as_bytes()).unwrap();
     f.write("\n\n".as_bytes()).unwrap();
 
+    f.write("texmath:\n".as_bytes()).unwrap();
+    f.write(texmath.as_bytes()).unwrap();
+    f.write("\n\n".as_bytes()).unwrap();
 }
 // 把Exp转换为TeX, 带上环境
 pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result<String, String>{
@@ -87,7 +148,6 @@ pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Resul
         last_control: false,
     };
     for exp in &exps {
-        dbg!(exp);
         write_exp(twc, exp)?;
     }
     Ok(twc.tex.clone())
@@ -187,8 +247,9 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
                             write_exp(c, &ele[0])?;
                         },
                         _ => {
-                            // TODO: 表格中的多个元素
-                            Err("array table multiple elements not implemented".to_string())?;
+                            for e in ele{
+                                write_exp(c, e)?;
+                            }
                         }
                     }
 
@@ -246,20 +307,25 @@ fn delimited_write_right_array(c: &mut TexWriterContext, open: &String, close: &
                     write_array_table(c, "Bmatrix", &Vec::<Alignment>::new(), rows)?;
                 }
             }
-            (true, "\u{2223}", "\u{2223}") => {
+            // 读取进来的AST确实是这样的, 但是这里的open和close是unicode码点, 需不需要先escaped一遍做统一处理?
+            // 例如说在READ AST的时候就把open和close转换为unicode码点
+            // TODO: EDelimited 码点转义
+            (true, "\\8739", "\\8739") => {
                 if aligns_is_all_center(aligns) {
                     // \begin{vmatrix} \end{vmatrix}
                     write_array_table(c, "vmatrix", &Vec::<Alignment>::new(), rows)?;
                 }
             }
-            (true, "\u{2225}", "\u{2225}") => {
+            (true, "\\8741", "\\8741") => {
                 if aligns_is_all_center(aligns) {
                     // \begin{Vmatrix} \end{Vmatrix}
                     write_array_table(c, "Vmatrix", &Vec::<Alignment>::new(), rows)?;
                 }
             }
             _ => {
-                panic!("delimited_write_right_array not implemented");
+                delimited_write_delim(c, FenceType::DLeft, open);
+                write_array_table(c, "array", aligns, rows)?;
+                delimited_write_delim(c, FenceType::DRight, close);
                 // delimited_write_delim(c, FenceType::DLeft, &open);
                 // // TODO: write array is ?
                 // write_exp(c, exp)?;
@@ -272,6 +338,7 @@ fn delimited_write_right_array(c: &mut TexWriterContext, open: &String, close: &
 fn write_binom(c: &mut TexWriterContext, cmd: &str, e1: &Exp, e2: &Exp) -> Result<(), String>{
     // \binom{a}{b}
     // TODO: write binom
+    panic!("write_binom not implemented");
     Ok(())
 }
 
@@ -298,8 +365,13 @@ fn delimited_fraction_noline(c: &mut TexWriterContext, left: &String, right: &St
             // others:
             // writeExp (EDelimited open close [Right (EArray [AlignCenter]
             //     [[[x]],[[y]]])])
-            // TODO: delimited write right array
-            panic!("delimited_fraction_noline not implemented");
+
+            delimited_write_right_array(c, left, right,
+                                        &vec![Alignment::AlignCenter],
+                                        &vec![
+                                            vec![vec![frac_exp1.clone()]],
+                                            vec![vec![frac_exp2.clone()]]
+                                        ])?;
         }
     })
 }
@@ -379,10 +451,10 @@ fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &
 
     let is_right = is_all_right(exp_list);
     let is_standard_height = is_all_standard_height(exp_list);
-    if is_open_close && is_right && is_standard_height{
+    return if is_open_close && is_right && is_standard_height {
         c.tex.push_str(&get_tex_math_many(open, &c.envs));
         // mapM_ (either (writeDelim DMiddle) writeExp) es
-        for exp in exp_list{
+        for exp in exp_list {
             match exp {
                 InEDelimited::Left(delim) => {
                     delimited_write_delim(c, FenceType::DMiddle, delim);
@@ -393,14 +465,14 @@ fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &
             }
         }
         c.tex.push_str(&get_tex_math_many(close, &c.envs));
-        return Ok(());
-    }else{
+        Ok(())
+    } else {
         // writeExp (EDelimited open close es) =  do
         // writeDelim DLeft open
         // mapM_ (either (writeDelim DMiddle) writeExp) es
         // writeDelim DRight close
         delimited_write_delim(c, FenceType::DLeft, open);
-        for exp in exp_list{
+        for exp in exp_list {
             match exp {
                 InEDelimited::Left(delim) => {
                     delimited_write_delim(c, FenceType::DMiddle, delim);
@@ -411,7 +483,7 @@ fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &
             }
         }
         delimited_write_delim(c, FenceType::DRight, close);
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -420,7 +492,7 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
 
     let dia_cmd = match e1{
         Exp::ESymbol(t, s) => {
-            if t == &TeXSymbolType::Accent || t == &node::TeXSymbolType:: TOver || t == &TeXSymbolType::TUnder {
+            if t == &TeXSymbolType::Accent || t == &TeXSymbolType:: TOver || t == &TeXSymbolType::TUnder {
                 get_diacritical_cmd(p, s)
             }else{
                 None
@@ -765,6 +837,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::EDelimited(left, right, exp_list) => {
+
             c.last_control = false;
             // EDelimited open close [Right (EFraction NoLineFrac e1 e2)]
             if exp_list.len() == 1{
@@ -799,7 +872,11 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             let escaped = get_tex_math_many(&symbol, &c.envs);
             // 如果是Bin, Rel则需要添加一个空格
             if *symbol_type == TeXSymbolType::Bin || *symbol_type == TeXSymbolType::Rel{
-                c.tex.push_str(" ");
+                // 如果已经以空格结尾, 则不需要再添加空格
+                if c.tex.chars().last().unwrap() != ' '{
+                    c.tex.push_str(" ");
+                }
+                // c.tex.push_str(" ");
             }
 
             c.tex.push_str(&escaped);
@@ -918,50 +995,44 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
 
         Exp::ESuper(exp1, exp2) => {
             if is_fancy(exp1){
-                c.tex.push_str("{");
-                write_exp(c, exp1)?;
-                c.tex.push_str("}");
+                write_grouped_exp(c, exp1)?;
                 c.last_control = false;
             }else{
                 write_exp(c, exp1)?;
             }
 
-            c.tex.push_str("^{");
-            write_exp(c, exp2)?;
-            c.tex.push_str("}");
+            c.tex.push_str("^");
+            write_grouped_exp(c, exp2)?;
             c.last_control = false;
         },
 
         Exp::ESubsup(exp1, exp2, exp3) => {
             if is_fancy(exp1){
-                c.tex.push_str("{");
-                write_exp(c, exp1)?;
-                c.tex.push_str("}");
+                write_grouped_exp(c, exp1)?;
                 c.last_control = false;
             }else{
                 write_exp(c, exp1)?;
             }
 
-            c.tex.push_str("_{");
-            write_exp(c, exp2);
-            c.tex.push_str("}^{");
-            write_exp(c, exp3);
-            c.tex.push_str("}");
+            c.tex.push_str("_");
+            write_grouped_exp(c, exp2)?;
+            c.tex.push_str("^");
+            write_grouped_exp(c, exp3)?;
             c.last_control = false;
         },
 
         Exp::ESqrt(exp) => {
             c.last_control = false;
             c.tex.push_str("\\sqrt");
-            write_grouped_exp(c, exp);
+            write_grouped_exp(c, exp)?;
         },
 
         Exp::EFraction(fraction_type, exp1, exp2) => {
             c.last_control = false;
             c.tex.push_str("\\");
             c.tex.push_str(&fraction_type.to_str());
-            write_grouped_exp(c, exp1);
-            write_grouped_exp(c, exp2);
+            write_grouped_exp(c, exp1)?;
+            write_grouped_exp(c, exp2)?;
         },
 
         Exp::EText(text_type, str) => {
@@ -1022,60 +1093,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 }
             };
 
-            let mut s = String::new();
-            s.push_str("\\begin{");
-            s.push_str(name);
-            s.push_str("}");
-            // if has aligns
-            if aligns.len() > 0 {
-                s.push_str("{");
-                s.push_str(get_alignments(aligns).as_str());
-                s.push_str("}");
-            }
-            s.push_str("\n");
-
-            // array rows
-            match rows.len(){
-                0 => {},
-                1 => {
-                },
-                _ => {
-                    for row in rows{
-                        for ele in row{
-                            // write arrayline:
-                            match ele.len() {
-                                0 => {},
-                                1 => {
-                                    write_exp(c, &ele[0]);
-                                },
-                                _ => {
-                                    // TODO: 表格中的多个元素
-                                    panic!("writeArrayTable: multi elements not implemented")
-                                }
-                            }
-
-                            // 最后一个元素不需要输出&
-                            if ele == &row[row.len() - 1]{
-                                continue;
-                            }
-                            // 元素之间需要加上 &
-                            s.push_str(" & ");
-                        }
-
-                        if row == &rows[rows.len() - 1]{
-                            s.push_str("\n");
-                            continue; // 最后一行不需要输出\\, 只需要换行, 后面加上\end{name}
-                        }
-                        s.push_str(" ");
-                        s.push_str("\\\\");
-                        s.push_str("\n");
-                    }
-                }
-            }
-
-            s.push_str("\\end{");
-            s.push_str(name);
-            s.push_str("}");
+            write_array_table(c, name, aligns, rows)?;
         },
 
         Exp::EOver(convertible, b, e1) => {
@@ -1133,7 +1151,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                             c.tex.push_str("_");
                             // TODO: check_substack
                             // check_substack(res, e1, envs);
-                            write_grouped_exp(c, e1);
+                            write_grouped_exp(c, e1)?;
                             c.tex.push_str("^");
                             // check_substack(res, e2, envs);
                             write_grouped_exp(c, e2)?;
