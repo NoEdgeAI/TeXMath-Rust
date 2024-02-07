@@ -1,6 +1,7 @@
 same:false
 
 ast:
+
 [ EArray
     [ AlignCenter
     , AlignCenter
@@ -10,223 +11,224 @@ ast:
     , AlignCenter
     , AlignCenter
     , AlignCenter
-    , AlignCenter
     ]
     [ [ []
-      , [ EText TextNormal "0" ]
-      , [ EText TextNormal "1" ]
-      , [ EText TextNormal "2" ]
-      , [ EText TextNormal "3" ]
-      , [ EText TextNormal "4" ]
-      , [ EText TextNormal "5" ]
-      , [ EText TextNormal "6" ]
-      , [ EText TextNormal "7" ]
+      , [ EText TextNormal "30" ]
+      , [ EText TextNormal "31" ]
+      , [ EText TextNormal "32" ]
+      , [ EText TextNormal "33" ]
+      , [ EText TextNormal "34" ]
+      , [ EText TextNormal "35" ]
+      , [ EText TextNormal "36" ]
       ]
     , [ [ EText TextNormal "0" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ EMathOperator "" ]
-      , [ ESymbol Ord "0" ]
-      , [ ESymbol Ord "@" ]
-      , [ ESymbol Alpha "P" ]
-      , [ ESymbol Accent "`" ]
-      , [ ESymbol Alpha "p" ]
+      , [ ESymbol Accent "\768" ]
+      , [ ESymbol Accent "\784" ]
+      , [ ESymbol Ord "\800" ]
+      , [ ESymbol Accent "\816" ]
+      , [ ESymbol Ord "\832" ]
+      , [ ESymbol Ord "\848" ]
+      , [ ESymbol Ord "\864" ]
       ]
     , [ [ EText TextNormal "1" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Pun "!" ]
-      , [ ESymbol Ord "1" ]
-      , [ ESymbol Alpha "A" ]
-      , [ ESymbol Alpha "Q" ]
-      , [ ESymbol Alpha "a" ]
-      , [ ESymbol Alpha "q" ]
+      , [ ESymbol Accent "\769" ]
+      , [ ESymbol Accent "\785" ]
+      , [ ESymbol Ord "\801" ]
+      , [ ESymbol Accent "\817" ]
+      , [ ESymbol Ord "\833" ]
+      , [ ESymbol Ord "\849" ]
+      , [ ESymbol Ord "\865" ]
       ]
     , [ [ EText TextNormal "2" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Accent "\"" ]
-      , [ ESymbol Ord "2" ]
-      , [ ESymbol Alpha "B" ]
-      , [ ESymbol Alpha "R" ]
-      , [ ESymbol Alpha "b" ]
-      , [ ESymbol Alpha "r" ]
+      , [ ESymbol Accent "\770" ]
+      , [ ESymbol Accent "\786" ]
+      , [ ESymbol Ord "\802" ]
+      , [ ESymbol Accent "\818" ]
+      , [ ESymbol Ord "\834" ]
+      , [ ESymbol Ord "\850" ]
+      , [ ESymbol Ord "\866" ]
       ]
     , [ [ EText TextNormal "3" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "#" ]
-      , [ ESymbol Ord "3" ]
-      , [ ESymbol Alpha "C" ]
-      , [ ESymbol Alpha "S" ]
-      , [ ESymbol Alpha "c" ]
-      , [ ESymbol Alpha "s" ]
+      , [ ESymbol Accent "\771" ]
+      , [ ESymbol Ord "\787" ]
+      , [ ESymbol Accent "\803" ]
+      , [ ESymbol Accent "\819" ]
+      , [ ESymbol Ord "\835" ]
+      , [ ESymbol Ord "\851" ]
+      , [ ESymbol Ord "\867" ]
       ]
     , [ [ EText TextNormal "4" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "$" ]
-      , [ ESymbol Ord "4" ]
-      , [ ESymbol Alpha "D" ]
-      , [ ESymbol Alpha "T" ]
-      , [ ESymbol Alpha "d" ]
-      , [ ESymbol Alpha "t" ]
+      , [ ESymbol Accent "\772" ]
+      , [ ESymbol Ord "\788" ]
+      , [ ESymbol Ord "\804" ]
+      , [ ESymbol Ord "\820" ]
+      , [ ESymbol Ord "\836" ]
+      , [ ESymbol Ord "\852" ]
+      , [ ESymbol Ord "\868" ]
       ]
     , [ [ EText TextNormal "5" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "%" ]
-      , [ ESymbol Ord "5" ]
-      , [ ESymbol Alpha "E" ]
-      , [ ESymbol Alpha "U" ]
-      , [ ESymbol Alpha "e" ]
-      , [ ESymbol Alpha "u" ]
+      , [ ESymbol Accent "\773" ]
+      , [ ESymbol Accent "\789" ]
+      , [ ESymbol Ord "\805" ]
+      , [ ESymbol Ord "\821" ]
+      , [ ESymbol Ord "\837" ]
+      , [ ESymbol Ord "\853" ]
+      , [ ESymbol Ord "\869" ]
       ]
     , [ [ EText TextNormal "6" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "&" ]
-      , [ ESymbol Ord "6" ]
-      , [ ESymbol Alpha "F" ]
-      , [ ESymbol Alpha "V" ]
-      , [ ESymbol Alpha "f" ]
-      , [ ESymbol Alpha "v" ]
+      , [ ESymbol Accent "\774" ]
+      , [ ESymbol Ord "\790" ]
+      , [ ESymbol Ord "\806" ]
+      , [ ESymbol Ord "\822" ]
+      , [ ESymbol Accent "\838" ]
+      , [ ESymbol Ord "\854" ]
+      , [ ESymbol Ord "\870" ]
       ]
     , [ [ EText TextNormal "7" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Accent "'" ]
-      , [ ESymbol Ord "7" ]
-      , [ ESymbol Alpha "G" ]
-      , [ ESymbol Alpha "W" ]
-      , [ ESymbol Alpha "g" ]
-      , [ ESymbol Alpha "w" ]
+      , [ ESymbol Accent "\775" ]
+      , [ ESymbol Ord "\791" ]
+      , [ ESymbol Ord "\807" ]
+      , [ ESymbol Ord "\823" ]
+      , [ ESymbol Ord "\839" ]
+      , [ ESymbol Ord "\855" ]
+      , [ ESymbol Ord "\871" ]
       ]
     , [ [ EText TextNormal "8" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Open "(" ]
-      , [ ESymbol Ord "8" ]
-      , [ ESymbol Alpha "H" ]
-      , [ ESymbol Alpha "X" ]
-      , [ ESymbol Alpha "h" ]
-      , [ ESymbol Alpha "x" ]
+      , [ ESymbol Accent "\776" ]
+      , [ ESymbol Ord "\792" ]
+      , [ ESymbol Ord "\808" ]
+      , [ ESymbol Accent "\824" ]
+      , [ ESymbol Ord "\840" ]
+      , [ ESymbol Ord "\856" ]
+      , [ ESymbol Ord "\872" ]
       ]
     , [ [ EText TextNormal "9" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Close ")" ]
-      , [ ESymbol Ord "9" ]
-      , [ ESymbol Alpha "I" ]
-      , [ ESymbol Alpha "Y" ]
-      , [ ESymbol Alpha "i" ]
-      , [ ESymbol Alpha "y" ]
+      , [ ESymbol Accent "\777" ]
+      , [ ESymbol Ord "\793" ]
+      , [ ESymbol Ord "\809" ]
+      , [ ESymbol Ord "\825" ]
+      , [ ESymbol Ord "\841" ]
+      , [ ESymbol Ord "\857" ]
+      , [ ESymbol Ord "\873" ]
       ]
     , [ [ EText TextNormal "A" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Pun ":" ]
-      , [ ESymbol Alpha "J" ]
-      , [ ESymbol Alpha "Z" ]
-      , [ ESymbol Alpha "j" ]
-      , [ ESymbol Alpha "z" ]
+      , [ ESymbol Accent "\778" ]
+      , [ ESymbol Accent "\794" ]
+      , [ ESymbol Ord "\810" ]
+      , [ ESymbol Accent "\826" ]
+      , [ ESymbol Ord "\842" ]
+      , [ ESymbol Ord "\858" ]
+      , [ ESymbol Ord "\874" ]
       ]
     , [ [ EText TextNormal "B" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Bin "+" ]
-      , [ ESymbol Pun ";" ]
-      , [ ESymbol Alpha "K" ]
-      , [ ESymbol Open "[" ]
-      , [ ESymbol Alpha "k" ]
-      , [ ESymbol Open "{" ]
+      , [ ESymbol Ord "\779" ]
+      , [ ESymbol Ord "\795" ]
+      , [ ESymbol Ord "\811" ]
+      , [ ESymbol Ord "\827" ]
+      , [ ESymbol Ord "\843" ]
+      , [ ESymbol Ord "\859" ]
+      , [ ESymbol Ord "\875" ]
       ]
     , [ [ EText TextNormal "C" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Pun "," ]
-      , [ ESymbol Rel "<" ]
-      , [ ESymbol Alpha "L" ]
-      , [ ESymbol Ord "\\" ]
-      , [ ESymbol Alpha "l" ]
-      , [ ESymbol Op "|" ]
+      , [ ESymbol Accent "\780" ]
+      , [ ESymbol Ord "\796" ]
+      , [ ESymbol Accent "\812" ]
+      , [ ESymbol Ord "\828" ]
+      , [ ESymbol Ord "\844" ]
+      , [ ESymbol Ord "\860" ]
+      , [ ESymbol Ord "\876" ]
       ]
     , [ [ EText TextNormal "D" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Bin "-" ]
-      , [ ESymbol Rel "=" ]
-      , [ ESymbol Alpha "M" ]
-      , [ ESymbol Close "]" ]
-      , [ ESymbol Alpha "m" ]
-      , [ ESymbol Close "}" ]
+      , [ ESymbol Ord "\781" ]
+      , [ ESymbol Ord "\797" ]
+      , [ ESymbol Accent "\813" ]
+      , [ ESymbol Ord "\829" ]
+      , [ ESymbol Ord "\845" ]
+      , [ ESymbol Ord "\861" ]
+      , [ ESymbol Ord "\877" ]
       ]
     , [ [ EText TextNormal "E" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Alpha "." ]
-      , [ ESymbol Rel ">" ]
-      , [ ESymbol Alpha "N" ]
-      , [ ESymbol Ord "^" ]
-      , [ ESymbol Alpha "n" ]
-      , [ ESymbol Accent "~" ]
+      , [ ESymbol Ord "\782" ]
+      , [ ESymbol Ord "\798" ]
+      , [ ESymbol Accent "\814" ]
+      , [ ESymbol Ord "\830" ]
+      , [ ESymbol Ord "\846" ]
+      , [ ESymbol Ord "\862" ]
+      , [ ESymbol Ord "\878" ]
       ]
     , [ [ EText TextNormal "F" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "*" ]
-      , [ ESymbol Ord "/" ]
-      , [ ESymbol Ord "?" ]
-      , [ ESymbol Alpha "O" ]
-      , [ ESymbol Ord "_" ]
-      , [ ESymbol Alpha "o" ]
-      , [ ESymbol Ord "@" ]
+      , [ ESymbol Ord "\783" ]
+      , [ ESymbol Ord "\799" ]
+      , [ ESymbol Accent "\815" ]
+      , [ ESymbol Accent "\831" ]
+      , [ ESymbol Ord "\847" ]
+      , [ ESymbol Ord "\863" ]
+      , [ ESymbol Ord "\879" ]
       ]
     ]
 ]
 
+
 tex:
 \begin{matrix}
- & \text{0} & \text{1} & \text{2} & \text{3} & \text{4} & \text{5} & \text{6} & \text{7} \\
-\text{0} & * & * & \ & 0 & @ & P & ` & p \\
-\text{1} & * & * & ! & 1 & A & Q & a & q \\
-\text{2} & * & * & \f & 2 & B & R & b & r \\
-\text{3} & * & * & # & 3 & C & S & c & s \\
-\text{4} & * & * & $ & 4 & D & T & d & t \\
-\text{5} & * & * & % & 5 & E & U & e & u \\
-\text{6} & * & * & & & 6 & F & V & f & v \\
-\text{7} & * & * & ' & 7 & G & W & g & w \\
-\text{8} & * & * & ( & 8 & H & X & h & x \\
-\text{9} & * & * & ) & 9 & I & Y & i & y \\
-\text{A} & * & * & * & : & J & Z & j & z \\
-\text{B} & * & * & +  & ; & K & [ & k & { \\
-\text{C} & * & * & , & <  & L & \\ & l & | \\
-\text{D} & * & * & -  & =  & M & ] & m & } \\
-\text{E} & * & * & . & >  & N & ^ & n & ~ \\
-\text{F} & * & * & / & ? & O & _ & o & @
+ & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
+\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
+\text{1} & \acute{} & ̑ & ̡ & \underbar & ́ & ͑ & ͡ \\
+\text{2} & \hat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
+\text{3} & \tilde{} & ̓ & ̣ & ̳{} & ̓ & ͓ & ͣ \\
+\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
+\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
+\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
+\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
+\text{8} & \ddot{} & ̘ & ̨ & \not & ͈ & ͘ & ͨ \\
+\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
+\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
+\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
+\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
+\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
+\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
+\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
 \end{matrix}
 
 expect:
 \begin{matrix}
- & \text{0} & \text{1} & \text{2} & \text{3} & \text{4} & \text{5} & \text{6} & \text{7} \\
-\text{0} & * & * & \operatorname{} & 0 & @ & P & ` & p \\
-\text{1} & * & * & ! & 1 & A & Q & a & q \\
-\text{2} & * & * & " & 2 & B & R & b & r \\
-\text{3} & * & * & \# & 3 & C & S & c & s \\
-\text{4} & * & * & \$ & 4 & D & T & d & t \\
-\text{5} & * & * & \% & 5 & E & U & e & u \\
-\text{6} & * & * & \& & 6 & F & V & f & v \\
-\text{7} & * & * & ' & 7 & G & W & g & w \\
-\text{8} & * & * & ( & 8 & H & X & h & x \\
-\text{9} & * & * & ) & 9 & I & Y & i & y \\
-\text{A} & * & * & * & : & J & Z & j & z \\
-\text{B} & * & * & + & ; & K & \lbrack & k & \{ \\
-\text{C} & * & * & , & < & L & \backslash & l & | \\
-\text{D} & * & * & - & = & M & \rbrack & m & \} \\
-\text{E} & * & * & . & > & N & \hat{} & n & \sim \\
-\text{F} & * & * & / & ? & O & \_ & o & @
+ & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
+\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
+\text{1} & \acute{} & ̑ & ̡ & \underbar{} & ́ & ͑ & ͡ \\
+\text{2} & \hat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
+\text{3} & \tilde{} & ̓ & ̣ & ̳ & ̓ & ͓ & ͣ \\
+\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
+\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
+\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
+\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
+\text{8} & \ddot{} & ̘ & ̨ & \not{} & ͈ & ͘ & ͨ \\
+\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
+\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
+\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
+\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
+\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
+\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
+\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
 \end{matrix}
 
 texmath:
-
+\begin{matrix}
+ & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
+\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
+\text{1} & \acute{} & ̑ & ̡ & \underset{\underbar{}}{\&}́ & ͑ & ͡ \\
+\text{2} & \widehat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
+\text{3} & \widetilde{} & ̓ & ̣ & ̳{} & ̓ & ͓ & ͣ \\
+\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
+\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
+\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
+\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
+\text{8} & \ddot{} & ̘ & ̨ & {\&\not{}}͈ & ͘ & ͨ \\
+\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
+\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
+\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
+\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
+\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
+\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
+\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
+\end{matrix}
 

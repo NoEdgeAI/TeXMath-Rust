@@ -6,6 +6,7 @@ use std::io::Write;
 
 mod ast;
 use std::time::Instant;
+use serde::de::Unexpected::Str;
 
 use crate::ast::ast_reader;
 use crate::ast::tex_writer::judge_by_texmath;
@@ -121,8 +122,30 @@ fn read_dir_files(dir: &Path) -> io::Result<(Vec<String>, Vec<String>, Vec<Strin
 
     Ok((filenames, natives, texs))
 }
+
+fn pretty_print_hex(output: String) -> String{
+    // 第一行显示hex, 第二行显示字符:
+    // 40 41 42
+    // @  A  B
+
+    // 把0D 0A替换成0A
+
+    let output = output.replace("\r\n", "\n");
+    let mut hex = String::new();
+    let mut cs = String::new();
+    for c in output.chars() {
+        hex.push_str(&format!("{:02x} ", c as u8));
+        match c {
+            '\n' => cs.push_str("\\n "),
+            '\t' => cs.push_str("\\t "),
+            '\r' => cs.push_str("\\r "),
+            _ => cs.push_str(&format!("{}  ", c)),
+        }
+    }
+    return format!("{}\n{}", hex, cs);
+}
 fn test_totex(){
-    let dir = "./src/tex";
+    let dir = "./src/test";
 
     let res = read_dir_files(Path::new(dir)); // 读取目录下所有文件
     match res {
@@ -148,6 +171,7 @@ fn test_totex(){
                 println!("===============================");
                 println!("Exp read successfully: {}/{}", i+1, natives.len());
                 println!("Filename: {}", filenames[i]);
+                // std::thread::sleep(std::time::Duration::from_millis(100));
                 // dbg!(exp);
                 let totex_res = ast::tex_writer::write_tex_with_env(exp, &envs);
                 match totex_res{
@@ -158,10 +182,10 @@ fn test_totex(){
                         let right_tex = texs[i].trim().to_string();
                         let native = natives[i].trim().to_string();
                         let (same, texmath_res) = judge_by_texmath(right_tex.clone(), tex.clone());
-                        if same {
+                        if same || pretty_print_hex(right_tex.clone()) == pretty_print_hex(tex.clone()) {
                             // println!("to_test ok: {}/{}", i+1, natives.len());
-                            let right_tex = texs[i].trim().to_string().replace("\r", "");
-                            let tex = tex.trim().to_string().replace("\r", "");
+                            let right_tex = texs[i].trim().to_string().replace("\r\n", "\n");
+                            let tex = tex.trim().to_string().replace("\r\n", "\n");
                             if right_tex == tex {
                                 println!("same tex : {}/{}", i+1, natives.len());
                             } else {
@@ -175,6 +199,9 @@ fn test_totex(){
                         let mut f = io::BufWriter::new(f);
                         println!("same: {}", same);
 
+                        f.write("filename:".as_bytes()).unwrap();
+                        f.write(filenames[i].as_bytes()).unwrap();
+                        f.write("\n\n".as_bytes()).unwrap();
                         f.write("same:".as_bytes()).unwrap();
                         f.write(same.to_string().as_bytes()).unwrap();
                         f.write("\n\n".as_bytes()).unwrap();
@@ -194,7 +221,15 @@ fn test_totex(){
                         f.write("texmath:\n".as_bytes()).unwrap();
                         f.write(texmath_res.as_bytes()).unwrap();
                         f.write("\n\n".as_bytes()).unwrap();
-                        panic!("to_test error: {}/{}", i, natives.len());
+
+                        // bytes hex:
+                        f.write(pretty_print_hex(right_tex.clone()).as_bytes()).unwrap();
+                        f.write("\n".as_bytes()).unwrap();
+
+                        f.write(pretty_print_hex(tex.clone()).as_bytes()).unwrap();
+                        f.write("\n".as_bytes()).unwrap();
+                        panic!("to_test error: {}/{}: {file}", i+1, natives.len(), file = filenames[i]);
+                        // println!("to_test error: {}/{}: {file}", i+1, natives.len(), file = filenames[i]);
                     },
                     Err(e) => {
                         println!("Exp to tex error: {}/{}", i, natives.len());

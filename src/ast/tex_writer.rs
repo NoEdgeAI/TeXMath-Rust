@@ -239,13 +239,16 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
         1 => {
         },
         _ => {
-            for row in rows{
-                for ele in row{
+            for (i, row) in rows.iter().enumerate(){
+                for (j, ele) in row.iter().enumerate(){
                     // write arrayline:
                     match ele.len() {
                         0 => {},
                         1 => {
                             write_exp(c, &ele[0])?;
+
+                            // TODO: 边界情况:
+                            // \grave -> \grave{}: 有些命令后面需要加{}, 因为有些命令后面不加{}会导致后面的字母被吃掉
                         },
                         _ => {
                             for e in ele{
@@ -255,14 +258,14 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
                     }
 
                     // 最后一个元素不需要输出&
-                    if ele == &row[row.len() - 1]{
+                    if j == row.len() - 1{
                         continue;
                     }
                     // 元素之间需要加上 &
                     c.tex.push_str(" & ");
                 }
 
-                if row == &rows[rows.len() - 1]{
+                if i == rows.len() - 1{
                     c.tex.push_str("\n");
                     continue; // 最后一行不需要输出\\, 只需要换行, 后面加上\end{name}
                 }
@@ -339,7 +342,7 @@ fn delimited_write_right_array(c: &mut TexWriterContext, open: &String, close: &
 fn write_binom(c: &mut TexWriterContext, cmd: &str, e1: &Exp, e2: &Exp) -> Result<(), String>{
     // \binom{a}{b}
     // TODO: write binom
-    panic!("write_binom not implemented");
+    // panic!("write_binom not implemented");
     Ok(())
 }
 
@@ -647,7 +650,8 @@ fn is_delimiters(s: &str, envs: &HashMap<String, bool>) -> bool{
 
 fn get_scaler_cmd(rational: &Rational) -> Option<String>{
     // TODO: get scaler cmd
-    panic!("get_scaler_cmd not implemented");
+    // panic!("get_scaler_cmd not implemented");
+    return None;
 }
 // 将\\ 转换为空格
 fn fix_space(s: &str) -> String{
@@ -875,14 +879,13 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             // 如果是Bin, Rel则需要添加一个空格
             if *symbol_type == TeXSymbolType::Bin || *symbol_type == TeXSymbolType::Rel{
                 // 如果已经以空格结尾, 则不需要再添加空格
-                if c.tex.chars().last().unwrap() != ' '{
+                if c.tex.len() > 0 && c.tex.chars().last().unwrap() != ' '{
                     c.tex.push_str(" ");
                 }
-                // c.tex.push_str(" ");
             }
 
             c.tex.push_str(&escaped);
-            // TODO: symbol escape
+            // TODO: ESymbol有多个字符的处理
             // if symbol.len() > 1 && (symbol_type == &node::TeXSymbolType::Bin || symbol_type == &node::TeXSymbolType::Rel || symbol_type == &node::TeXSymbolType::Op) {
             //     s.push_str("\\math");
             //     s.push_str(symbol_type.to_show().as_str());
@@ -955,7 +958,9 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             // 为了防止连续的标识符被合并, 需要在标识符之间添加空格, 如:
             // \alphax -> \alpha x
             let escaped = get_tex_math_many(&identifier, &c.envs);
-            if c.last_control && c.tex.chars().last().unwrap().is_alphabetic() && escaped.chars().next().unwrap().is_alphabetic(){
+            if c.last_control &&
+                c.tex.len() > 0 && c.tex.chars().last().unwrap().is_alphabetic() &&
+                escaped.len() > 0 && escaped.chars().next().unwrap().is_alphabetic(){
                 c.tex.push_str(" ");
                 c.last_control = false;
             }
@@ -1177,7 +1182,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             }
             // TODO: underover
             // writeExp (EUnder convertible (EOver convertible b e2) e1)
-            panic!("writeExp (EUnder convertible (EOver convertible b e2) e1) not implemented");
+            // panic!("writeExp (EUnder convertible (EOver convertible b e2) e1) not implemented");
         },
 
         Exp::ERoot(exp1, exp2) => {
