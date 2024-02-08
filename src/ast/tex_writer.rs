@@ -2,9 +2,10 @@ use core::panic;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use super::{node, shared};
+use serde_json::json;
+use crate::ast::shared::is_mathoperator;
+use crate::pretty_print_hex;
+use super::shared;
 use super::to_tex_unicode;
 use super::node::{Exp, Alignment, ArrayLines, TextType, TeXSymbolType, FractionType, InEDelimited, Rational};
 
@@ -30,7 +31,7 @@ struct TexWriterContext {
 #[test]
 fn test_tex_writer(){
     let case = r#"
-    [ESub (EIdentifier "\981") (EIdentifier "n")]"#;
+    [ ESymbol Ord "\8834\8402", ESymbol Ord "\8835\8402" ]"#;
     let mut envs = HashMap::new();
     envs.insert("amsmath".to_string(), true);
     envs.insert("amssymb".to_string(), true);
@@ -61,7 +62,7 @@ f(x) = \begin{cases}
     println!("res: \n{}", res);
 }
 pub fn judge_by_texmath(right_tex: String, test_tex: String) -> (bool, String){
-    let json = json!(
+    let test_tex_json = json!(
         {
             "display": false,
             "from": "tex",
@@ -71,24 +72,42 @@ pub fn judge_by_texmath(right_tex: String, test_tex: String) -> (bool, String){
     );
     let client = reqwest::blocking::Client::new();
     let res = client.post("http://localhost:3000/convert")
-        .json(&json).send().unwrap();
+        .json(&test_tex_json).send().unwrap();
     // println!("status: {}", res.status());
     // println!("headers: {:#?}", res.headers());
     if res.status() != 200{
         println!("status: {}", res.status());
         println!("headers: {:#?}", res.headers());
-        println!("json: {:#?}", json);
+        println!("json: {:#?}", test_tex_json);
         return (false, "".to_string())
     }
-    let body = res.text().unwrap();
-    let body = body.trim().to_string().replace("\r", "");
-    let right_tex = right_tex.trim().to_string().replace("\r", "");
+    let test_tex = res.text().unwrap().trim().to_string().replace("\r\n", "\n");
+
+    let right_tex_json = json!(
+        {
+            "display": false,
+            "from": "tex",
+            "to": "tex",
+            "text": right_tex
+        }
+    );
+
+    let res = client.post("http://localhost:3000/convert")
+        .json(&right_tex_json).send().unwrap();
+    if res.status() != 200{
+        println!("status: {}", res.status());
+        println!("headers: {:#?}", res.headers());
+        println!("json: {:#?}", right_tex_json);
+        return (false, "".to_string())
+    }
+
+    let right_tex = res.text().unwrap().trim().to_string().replace("\r\n", "\n");
     // println!("A: {:?}", body.as_bytes());
     // println!("B: {:?}", right_tex.as_bytes());
-    if body == right_tex{
-        return (true, body);
+    if test_tex == right_tex{
+        return (true, test_tex);
     }
-    return (false, body);
+    return (false, test_tex);
 }
 #[test]
 fn test_text_writer_file(){
@@ -140,6 +159,13 @@ fn test_text_writer_file(){
     f.write("texmath:\n".as_bytes()).unwrap();
     f.write(texmath.as_bytes()).unwrap();
     f.write("\n\n".as_bytes()).unwrap();
+
+    // bytes hex:
+    f.write(pretty_print_hex(o_tex.clone()).as_bytes()).unwrap();
+    f.write("\n".as_bytes()).unwrap();
+
+    f.write(pretty_print_hex(tex.clone()).as_bytes()).unwrap();
+    f.write("\n".as_bytes()).unwrap();
 }
 // 把Exp转换为TeX, 带上环境
 pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result<String, String>{
@@ -249,6 +275,19 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
 
                             // TODO: 边界情况:
                             // \grave -> \grave{}: 有些命令后面需要加{}, 因为有些命令后面不加{}会导致后面的字母被吃掉
+                            // match &ele[0]{
+                            //     Exp::ESymbol(TeXSymbolType::Accent, s) => {
+                            //         match s.as_str(){
+                            //             "\\underbrace" | "\\underline" | "\\underbar" | "\\underbracket" => {
+                            //                 if c.tex.chars().last().unwrap() != '}'{
+                            //                     c.tex.push_str("{}");
+                            //                 }
+                            //             }
+                            //             _ => {}
+                            //         }
+                            //     },
+                            //     _ => {}
+                            // }
                         },
                         _ => {
                             for e in ele{
@@ -269,7 +308,11 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
                     c.tex.push_str("\n");
                     continue; // 最后一行不需要输出\\, 只需要换行, 后面加上\end{name}
                 }
-                c.tex.push_str(" ");
+                // 如果不是最后一行, 需要输出\\
+                if c.tex.chars().last().unwrap() != ' '{
+                    // TODO: 检查\转义空格
+                    c.tex.push_str(" ");
+                }
                 c.tex.push_str("\\\\");
                 c.tex.push_str("\n");
             }
@@ -978,10 +1021,17 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::EMathOperator(math_operator) => {
-            // TODO: more precise MathOperator
-            c.tex.push_str("\\");
-            c.tex.push_str(&math_operator);
-            // TODO: space_control
+            let escaped = get_tex_math_many(&math_operator, &c.envs);
+
+            if is_mathoperator(escaped.as_str()) {
+                c.tex.push_str("\\");
+                c.tex.push_str(&escaped);
+            }else{
+                c.tex.push_str("\\operatorname{");
+                // TODO: ask \operatorname* for more precise
+                c.tex.push_str(&escaped);
+                c.tex.push_str("}");
+            }
         },
 
         Exp::ESub(exp1, exp2) => {

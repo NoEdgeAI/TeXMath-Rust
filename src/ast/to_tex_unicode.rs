@@ -78,17 +78,33 @@ fn test_get_math_tex_many(){
 // 3. \d{1~5} -> \12345 unicode转换
 pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
     let mut res = String::new();
+    let mut space_flag = false; // 上一个符号是\控制符的情况下, 下一个符号加空格
     let chars = spilt_str(s);
     for c in chars {
         match c {
             CharType::Unicode(num) => {
+                if num == "\\65024"{
+                    // -- we ignore 65024 VARIATION SELECTOR 1 to avoid putting it
+                    //     -- literally in the output ; it is used in mathml output.
+                    //     charToLaTeXString _ '\65024' = Just []
+                    continue;
+                }
                 if let Some(cmd) = lookup_tex_cmd_table(num.as_str(), envs) {
                     res.push_str(cmd.as_str());
+                    if cmd.starts_with("\\") && cmd.chars().last().unwrap().is_alphabetic() {
+                        // \[a-zA-Z], 结尾是字母, 可能需要加空格
+                        space_flag = true;
+                    }
                 }else {
                     if let Some(unicode) = parse_as_unicode_char(num.as_str()) {
                         if let Some(cmd) = look_rev_text_unicode_table(&unicode.to_string()) {
                             res.push_str(cmd.as_str());
+                            // 这些命令都是\mathbb{A}这种形式, 不需要加空格
                         }else{
+                            if space_flag && res.chars().last().unwrap().is_alphanumeric() {
+                                res.push_str(" ");
+                                space_flag = false;
+                            }
                             res.push_str(escape_latex(unicode).as_str());
                         }
                     }else{
@@ -106,6 +122,10 @@ pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
                 });
             },
             CharType::Normal(c) => {
+                if space_flag && c.is_alphanumeric() && res.chars().last().unwrap().is_alphanumeric() {
+                    res.push_str(" ");
+                    space_flag = false;
+                }
                 res.push_str(&escape_latex(c));
             }
         }
@@ -249,6 +269,9 @@ lazy_static! {
             let c = record.get(1).expect("Missing char");
             let val = Box::leak(Box::new(record.get(2).expect("Missing val").to_string()));
             let key = Box::leak(Box::new(format!("{}_{}", env, c)));
+            if m.contains_key(key.as_str()) {
+                continue;
+            }
             m.insert(key, val);
         }
         m

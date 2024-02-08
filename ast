@@ -1,186 +1,152 @@
 <<< native
 [ EArray
-    [ AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    ]
-    [ [ []
-      , [ EText TextNormal "30" ]
-      , [ EText TextNormal "31" ]
-      , [ EText TextNormal "32" ]
-      , [ EText TextNormal "33" ]
-      , [ EText TextNormal "34" ]
-      , [ EText TextNormal "35" ]
-      , [ EText TextNormal "36" ]
+    [ AlignCenter , AlignCenter ]
+    [ [ [ EText TextNormal "vangrt" ] , [ ESymbol Ord "\10652" ] ]
+    , [ [ EText TextNormal "varepsilon" ] , [ ESymbol Alpha "\1013" ] ]
+    , [ [ EText TextNormal "varkappa" ] , [ ESymbol Alpha "\1008" ] ]
+    , [ [ EText TextNormal "varnothing" ] , [ ESymbol Ord "\8709" ] ]
+    , [ [ EText TextNormal "varphi" ] , [ ESymbol Alpha "\981" ] ]
+    , [ [ EText TextNormal "varpi" ] , [ ESymbol Alpha "\982" ] ]
+    , [ [ EText TextNormal "varpropto" ] , [ ESymbol Rel "\8733" ] ]
+    , [ [ EText TextNormal "varr" ] , [ ESymbol Rel "\8597" ] ]
+    , [ [ EText TextNormal "vArr" ] , [ ESymbol Rel "\8661" ] ]
+    , [ [ EText TextNormal "varrho" ] , [ ESymbol Alpha "\1009" ] ]
+    , [ [ EText TextNormal "varsigma" ] , [ ESymbol Alpha "\962" ] ]
+    , [ [ EText TextNormal "varsubsetneq" ]
+      , [ EMathOperator "\8842\65024" ]
       ]
-    , [ [ EText TextNormal "0" ]
-      , [ ESymbol Accent "\768" ]
-      , [ ESymbol Accent "\784" ]
-      , [ ESymbol Ord "\800" ]
-      , [ ESymbol Accent "\816" ]
-      , [ ESymbol Ord "\832" ]
-      , [ ESymbol Ord "\848" ]
-      , [ ESymbol Ord "\864" ]
+    , [ [ EText TextNormal "varsubsetneqq" ]
+      , [ EMathOperator "\10955\65024" ]
       ]
-    , [ [ EText TextNormal "1" ]
-      , [ ESymbol Accent "\769" ]
-      , [ ESymbol Accent "\785" ]
-      , [ ESymbol Ord "\801" ]
-      , [ ESymbol Accent "\817" ]
-      , [ ESymbol Ord "\833" ]
-      , [ ESymbol Ord "\849" ]
-      , [ ESymbol Ord "\865" ]
+    , [ [ EText TextNormal "varsupsetneq" ]
+      , [ EMathOperator "\8843\65024" ]
       ]
-    , [ [ EText TextNormal "2" ]
-      , [ ESymbol Accent "\770" ]
-      , [ ESymbol Accent "\786" ]
-      , [ ESymbol Ord "\802" ]
-      , [ ESymbol Accent "\818" ]
-      , [ ESymbol Ord "\834" ]
-      , [ ESymbol Ord "\850" ]
-      , [ ESymbol Ord "\866" ]
+    , [ [ EText TextNormal "varsupsetneqq" ]
+      , [ EMathOperator "\10956\65024" ]
       ]
-    , [ [ EText TextNormal "3" ]
-      , [ ESymbol Accent "\771" ]
-      , [ ESymbol Ord "\787" ]
-      , [ ESymbol Accent "\803" ]
-      , [ ESymbol Accent "\819" ]
-      , [ ESymbol Ord "\835" ]
-      , [ ESymbol Ord "\851" ]
-      , [ ESymbol Ord "\867" ]
+    , [ [ EText TextNormal "vartheta" ] , [ ESymbol Alpha "\977" ] ]
+    , [ [ EText TextNormal "vartriangleleft" ]
+      , [ ESymbol Rel "\8882" ]
       ]
-    , [ [ EText TextNormal "4" ]
-      , [ ESymbol Accent "\772" ]
-      , [ ESymbol Ord "\788" ]
-      , [ ESymbol Ord "\804" ]
-      , [ ESymbol Ord "\820" ]
-      , [ ESymbol Ord "\836" ]
-      , [ ESymbol Ord "\852" ]
-      , [ ESymbol Ord "\868" ]
+    , [ [ EText TextNormal "vartriangleright" ]
+      , [ ESymbol Rel "\8883" ]
       ]
-    , [ [ EText TextNormal "5" ]
-      , [ ESymbol Accent "\773" ]
-      , [ ESymbol Accent "\789" ]
-      , [ ESymbol Ord "\805" ]
-      , [ ESymbol Ord "\821" ]
-      , [ ESymbol Ord "\837" ]
-      , [ ESymbol Ord "\853" ]
-      , [ ESymbol Ord "\869" ]
+    , [ [ EText TextNormal "vBar" ] , [ ESymbol Rel "\10984" ] ]
+    , [ [ EText TextNormal "Vbar" ] , [ ESymbol Rel "\10987" ] ]
+    , [ [ EText TextNormal "vBarv" ] , [ ESymbol Rel "\10985" ] ]
+    , [ [ EText TextNormal "vcy" ] , [ ESymbol Ord "\1074" ] ]
+    , [ [ EText TextNormal "Vcy" ] , [ ESymbol Ord "\1042" ] ]
+    , [ [ EText TextNormal "vdash" ] , [ ESymbol Rel "\8866" ] ]
+    , [ [ EText TextNormal "vDash" ] , [ ESymbol Rel "\8872" ] ]
+    , [ [ EText TextNormal "Vdash" ] , [ ESymbol Rel "\8873" ] ]
+    , [ [ EText TextNormal "VDash" ] , [ ESymbol Rel "\8875" ] ]
+    , [ [ EText TextNormal "Vdashl" ] , [ ESymbol Rel "\10982" ] ]
+    , [ [ EText TextNormal "vee" ] , [ ESymbol Bin "\8744" ] ]
+    , [ [ EText TextNormal "Vee" ] , [ ESymbol Op "\8897" ] ]
+    , [ [ EText TextNormal "veebar" ] , [ ESymbol Bin "\8891" ] ]
+    , [ [ EText TextNormal "veeeq" ] , [ ESymbol Rel "\8794" ] ]
+    , [ [ EText TextNormal "vellip" ] , [ ESymbol Rel "\8942" ] ]
+    , [ [ EText TextNormal "verbar" ] , [ ESymbol Op "|" ] ]
+    , [ [ EText TextNormal "Verbar" ] , [ ESymbol Close "\8214" ] ]
+    , [ [ EText TextNormal "vert" ] , [ ESymbol Op "|" ] ]
+    , [ [ EText TextNormal "Vert" ] , [ ESymbol Close "\8214" ] ]
+    , [ [ EText TextNormal "VerticalBar" ] , [ ESymbol Rel "\8739" ] ]
+    , [ [ EText TextNormal "VerticalLine" ] , [ ESymbol Op "|" ] ]
+    , [ [ EText TextNormal "VerticalSeparator" ]
+      , [ ESymbol Ord "\10072" ]
       ]
-    , [ [ EText TextNormal "6" ]
-      , [ ESymbol Accent "\774" ]
-      , [ ESymbol Ord "\790" ]
-      , [ ESymbol Ord "\806" ]
-      , [ ESymbol Ord "\822" ]
-      , [ ESymbol Accent "\838" ]
-      , [ ESymbol Ord "\854" ]
-      , [ ESymbol Ord "\870" ]
+    , [ [ EText TextNormal "VerticalTilde" ]
+      , [ ESymbol Bin "\8768" ]
       ]
-    , [ [ EText TextNormal "7" ]
-      , [ ESymbol Accent "\775" ]
-      , [ ESymbol Ord "\791" ]
-      , [ ESymbol Ord "\807" ]
-      , [ ESymbol Ord "\823" ]
-      , [ ESymbol Ord "\839" ]
-      , [ ESymbol Ord "\855" ]
-      , [ ESymbol Ord "\871" ]
+    , [ [ EText TextNormal "VeryThinSpace" ]
+      , [ ESymbol Ord "\8202" ]
       ]
-    , [ [ EText TextNormal "8" ]
-      , [ ESymbol Accent "\776" ]
-      , [ ESymbol Ord "\792" ]
-      , [ ESymbol Ord "\808" ]
-      , [ ESymbol Accent "\824" ]
-      , [ ESymbol Ord "\840" ]
-      , [ ESymbol Ord "\856" ]
-      , [ ESymbol Ord "\872" ]
+    , [ [ EText TextNormal "vfr" ] , [ ESymbol Alpha "\120115" ] ]
+    , [ [ EText TextNormal "Vfr" ] , [ ESymbol Alpha "\120089" ] ]
+    , [ [ EText TextNormal "vltri" ] , [ ESymbol Rel "\8882" ] ]
+    , [ [ EText TextNormal "vnsub" ] , [ ESymbol Ord "\8834\8402" ] ]
+    , [ [ EText TextNormal "vnsup" ] , [ ESymbol Ord "\8835\8402" ] ]
+    , [ [ EText TextNormal "vopf" ] , [ ESymbol Alpha "\120167" ] ]
+    , [ [ EText TextNormal "Vopf" ] , [ ESymbol Alpha "\120141" ] ]
+    , [ [ EText TextNormal "vprop" ] , [ ESymbol Rel "\8733" ] ]
+    , [ [ EText TextNormal "vrtri" ] , [ ESymbol Rel "\8883" ] ]
+    , [ [ EText TextNormal "vscr" ] , [ ESymbol Alpha "\120011" ] ]
+    , [ [ EText TextNormal "Vscr" ] , [ ESymbol Alpha "\119985" ] ]
+    , [ [ EText TextNormal "vsubne" ]
+      , [ EMathOperator "\8842\65024" ]
       ]
-    , [ [ EText TextNormal "9" ]
-      , [ ESymbol Accent "\777" ]
-      , [ ESymbol Ord "\793" ]
-      , [ ESymbol Ord "\809" ]
-      , [ ESymbol Ord "\825" ]
-      , [ ESymbol Ord "\841" ]
-      , [ ESymbol Ord "\857" ]
-      , [ ESymbol Ord "\873" ]
+    , [ [ EText TextNormal "vsubnE" ]
+      , [ EMathOperator "\10955\65024" ]
       ]
-    , [ [ EText TextNormal "A" ]
-      , [ ESymbol Accent "\778" ]
-      , [ ESymbol Accent "\794" ]
-      , [ ESymbol Ord "\810" ]
-      , [ ESymbol Accent "\826" ]
-      , [ ESymbol Ord "\842" ]
-      , [ ESymbol Ord "\858" ]
-      , [ ESymbol Ord "\874" ]
+    , [ [ EText TextNormal "vsupne" ]
+      , [ EMathOperator "\8843\65024" ]
       ]
-    , [ [ EText TextNormal "B" ]
-      , [ ESymbol Ord "\779" ]
-      , [ ESymbol Ord "\795" ]
-      , [ ESymbol Ord "\811" ]
-      , [ ESymbol Ord "\827" ]
-      , [ ESymbol Ord "\843" ]
-      , [ ESymbol Ord "\859" ]
-      , [ ESymbol Ord "\875" ]
+    , [ [ EText TextNormal "vsupnE" ]
+      , [ EMathOperator "\10956\65024" ]
       ]
-    , [ [ EText TextNormal "C" ]
-      , [ ESymbol Accent "\780" ]
-      , [ ESymbol Ord "\796" ]
-      , [ ESymbol Accent "\812" ]
-      , [ ESymbol Ord "\828" ]
-      , [ ESymbol Ord "\844" ]
-      , [ ESymbol Ord "\860" ]
-      , [ ESymbol Ord "\876" ]
-      ]
-    , [ [ EText TextNormal "D" ]
-      , [ ESymbol Ord "\781" ]
-      , [ ESymbol Ord "\797" ]
-      , [ ESymbol Accent "\813" ]
-      , [ ESymbol Ord "\829" ]
-      , [ ESymbol Ord "\845" ]
-      , [ ESymbol Ord "\861" ]
-      , [ ESymbol Ord "\877" ]
-      ]
-    , [ [ EText TextNormal "E" ]
-      , [ ESymbol Ord "\782" ]
-      , [ ESymbol Ord "\798" ]
-      , [ ESymbol Accent "\814" ]
-      , [ ESymbol Ord "\830" ]
-      , [ ESymbol Ord "\846" ]
-      , [ ESymbol Ord "\862" ]
-      , [ ESymbol Ord "\878" ]
-      ]
-    , [ [ EText TextNormal "F" ]
-      , [ ESymbol Ord "\783" ]
-      , [ ESymbol Ord "\799" ]
-      , [ ESymbol Accent "\815" ]
-      , [ ESymbol Accent "\831" ]
-      , [ ESymbol Ord "\847" ]
-      , [ ESymbol Ord "\863" ]
-      , [ ESymbol Ord "\879" ]
-      ]
+    , [ [ EText TextNormal "Vvdash" ] , [ ESymbol Rel "\8874" ] ]
+    , [ [ EText TextNormal "vzigzag" ] , [ ESymbol Ord "\10650" ] ]
     ]
 ]
 >>> tex
 \begin{matrix}
- & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
-\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
-\text{1} & \acute{} & ̑ & ̡ & \underbar{} & ́ & ͑ & ͡ \\
-\text{2} & \hat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
-\text{3} & \tilde{} & ̓ & ̣ & ̳ & ̓ & ͓ & ͣ \\
-\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
-\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
-\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
-\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
-\text{8} & \ddot{} & ̘ & ̨ & \not{} & ͈ & ͘ & ͨ \\
-\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
-\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
-\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
-\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
-\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
-\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
-\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
+\text{vangrt} & ⦜ \\
+\text{varepsilon} & \epsilon \\
+\text{varkappa} & ϰ \\
+\text{varnothing} & \varnothing \\
+\text{varphi} & \phi \\
+\text{varpi} & \varpi \\
+\text{varpropto} & \propto \\
+\text{varr} & \updownarrow \\
+\text{vArr} & \Updownarrow \\
+\text{varrho} & \varrho \\
+\text{varsigma} & \varsigma \\
+\text{varsubsetneq} & \operatorname{\subsetneq} \\
+\text{varsubsetneqq} & \operatorname{\subsetneqq} \\
+\text{varsupsetneq} & \operatorname{\supsetneq} \\
+\text{varsupsetneqq} & \operatorname{\supsetneqq} \\
+\text{vartheta} & \vartheta \\
+\text{vartriangleleft} & \vartriangleleft \\
+\text{vartriangleright} & \vartriangleright \\
+\text{vBar} & ⫨ \\
+\text{Vbar} & ⫫ \\
+\text{vBarv} & ⫩ \\
+\text{vcy} & в \\
+\text{Vcy} & В \\
+\text{vdash} & \vdash \\
+\text{vDash} & \vDash \\
+\text{Vdash} & \Vdash \\
+\text{VDash} & ⊫ \\
+\text{Vdashl} & ⫦ \\
+\text{vee} & \vee \\
+\text{Vee} & \bigvee \\
+\text{veebar} & \veebar \\
+\text{veeeq} & ≚ \\
+\text{vellip} & \vdots \\
+\text{verbar} & | \\
+\text{Verbar} & \| \\
+\text{vert} & | \\
+\text{Vert} & \| \\
+\text{VerticalBar} & \mid \\
+\text{VerticalLine} & | \\
+\text{VerticalSeparator} & ❘ \\
+\text{VerticalTilde} & \wr \\
+\text{VeryThinSpace} & \, \\
+\text{vfr} & \mathfrak{v} \\
+\text{Vfr} & \mathfrak{V} \\
+\text{vltri} & \vartriangleleft \\
+\text{vnsub} & \subset ⃒ \\
+\text{vnsup} & \supset ⃒ \\
+\text{vopf} & \mathbb{v} \\
+\text{Vopf} & \mathbb{V} \\
+\text{vprop} & \propto \\
+\text{vrtri} & \vartriangleright \\
+\text{vscr} & \mathcal{v} \\
+\text{Vscr} & \mathcal{V} \\
+\text{vsubne} & \operatorname{\subsetneq} \\
+\text{vsubnE} & \operatorname{\subsetneqq} \\
+\text{vsupne} & \operatorname{\supsetneq} \\
+\text{vsupnE} & \operatorname{\supsetneqq} \\
+\text{Vvdash} & \Vvdash \\
+\text{vzigzag} & ⦚
 \end{matrix}

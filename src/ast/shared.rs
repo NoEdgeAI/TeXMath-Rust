@@ -179,3 +179,44 @@ pub fn escape_latex(c: char) -> String{
         _ => c.to_string()
     }
 }
+
+pub fn is_mathoperator(s: &str) -> bool {
+    // operators :: M.Map Exp T.Text
+    // operators = M.fromList
+    // [ (EMathOperator "arccos", "\\arccos")
+    // , (EMathOperator "arcsin", "\\arcsin")
+    // , (EMathOperator "arctan", "\\arctan")
+    // , (EMathOperator "arg", "\\arg")
+    // , (EMathOperator "cos", "\\cos")
+    // , (EMathOperator "cosh", "\\cosh")
+    // , (EMathOperator "cot", "\\cot")
+    // , (EMathOperator "coth", "\\coth")
+    // , (EMathOperator "csc", "\\csc")
+    // , (EMathOperator "deg", "\\deg")
+    // , (EMathOperator "det", "\\det")
+    // , (EMathOperator "dim", "\\dim")
+    // , (EMathOperator "exp", "\\exp")
+    // , (EMathOperator "gcd", "\\gcd")
+    // , (EMathOperator "hom", "\\hom")
+    // , (EMathOperator "inf", "\\inf")
+    // , (EMathOperator "ker", "\\ker")
+    // , (EMathOperator "lg", "\\lg")
+    // , (EMathOperator "lim", "\\lim")
+    // , (EMathOperator "liminf", "\\liminf")
+    // , (EMathOperator "limsup", "\\limsup")
+    // , (EMathOperator "ln", "\\ln")
+    // , (EMathOperator "log", "\\log")
+    // , (EMathOperator "max", "\\max")
+    // , (EMathOperator "min", "\\min")
+    // , (EMathOperator "Pr", "\\Pr")
+    // , (EMathOperator "sec", "\\sec")
+    // , (EMathOperator "sin", "\\sin")
+    // , (EMathOperator "sinh", "\\sinh")
+    // , (EMathOperator "sup", "\\sup")
+    // , (EMathOperator "tan", "\\tan")
+    // , (EMathOperator "tanh", "\\tanh") ]
+    match s {
+        "arccos" | "arcsin" | "arctan" | "arg" | "cos" | "cosh" | "cot" | "coth" | "csc" | "deg" | "det" | "dim" | "exp" | "gcd" | "hom" | "inf" | "ker" | "lg" | "lim" | "liminf" | "limsup" | "ln" | "log" | "max" | "min" | "Pr" | "sec" | "sin" | "sinh" | "sup" | "tan" | "tanh" => true,
+        _ => false
+    }
+}

@@ -1,234 +1,289 @@
+filename:u.test
+
 same:false
 
 ast:
-
 [ EArray
-    [ AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    , AlignCenter
-    ]
-    [ [ []
-      , [ EText TextNormal "30" ]
-      , [ EText TextNormal "31" ]
-      , [ EText TextNormal "32" ]
-      , [ EText TextNormal "33" ]
-      , [ EText TextNormal "34" ]
-      , [ EText TextNormal "35" ]
-      , [ EText TextNormal "36" ]
+    [ AlignCenter , AlignCenter ]
+    [ [ [ EText TextNormal "uacute" ] , [ ESymbol Ord "\250" ] ]
+    , [ [ EText TextNormal "Uacute" ] , [ ESymbol Ord "\218" ] ]
+    , [ [ EText TextNormal "uarr" ] , [ ESymbol Rel "\8593" ] ]
+    , [ [ EText TextNormal "uArr" ] , [ ESymbol Rel "\8657" ] ]
+    , [ [ EText TextNormal "Uarr" ] , [ ESymbol Accent "\8607" ] ]
+    , [ [ EText TextNormal "Uarrocir" ] , [ ESymbol Rel "\10569" ] ]
+    , [ [ EText TextNormal "ubrcy" ] , [ ESymbol Ord "\1118" ] ]
+    , [ [ EText TextNormal "Ubrcy" ] , [ ESymbol Ord "\1038" ] ]
+    , [ [ EText TextNormal "ubreve" ] , [ ESymbol Ord "\365" ] ]
+    , [ [ EText TextNormal "Ubreve" ] , [ ESymbol Ord "\364" ] ]
+    , [ [ EText TextNormal "ucirc" ] , [ ESymbol Ord "\251" ] ]
+    , [ [ EText TextNormal "Ucirc" ] , [ ESymbol Ord "\219" ] ]
+    , [ [ EText TextNormal "ucy" ] , [ ESymbol Ord "\1091" ] ]
+    , [ [ EText TextNormal "Ucy" ] , [ ESymbol Ord "\1059" ] ]
+    , [ [ EText TextNormal "udarr" ] , [ ESymbol Rel "\8645" ] ]
+    , [ [ EText TextNormal "udblac" ] , [ ESymbol Ord "\369" ] ]
+    , [ [ EText TextNormal "Udblac" ] , [ ESymbol Ord "\368" ] ]
+    , [ [ EText TextNormal "udhar" ] , [ ESymbol Rel "\10606" ] ]
+    , [ [ EText TextNormal "ufisht" ] , [ ESymbol Rel "\10622" ] ]
+    , [ [ EText TextNormal "ufr" ] , [ ESymbol Alpha "\120114" ] ]
+    , [ [ EText TextNormal "Ufr" ] , [ ESymbol Alpha "\120088" ] ]
+    , [ [ EText TextNormal "ugrave" ] , [ ESymbol Ord "\249" ] ]
+    , [ [ EText TextNormal "Ugrave" ] , [ ESymbol Ord "\217" ] ]
+    , [ [ EText TextNormal "uHar" ] , [ ESymbol Rel "\10595" ] ]
+    , [ [ EText TextNormal "uharl" ] , [ ESymbol Rel "\8639" ] ]
+    , [ [ EText TextNormal "uharr" ] , [ ESymbol Rel "\8638" ] ]
+    , [ [ EText TextNormal "uhblk" ] , [ ESymbol Ord "\9600" ] ]
+    , [ [ EText TextNormal "ulcorn" ] , [ ESymbol Open "\8988" ] ]
+    , [ [ EText TextNormal "ulcorner" ] , [ ESymbol Open "\8988" ] ]
+    , [ [ EText TextNormal "ulcrop" ] , [ ESymbol Ord "\8975" ] ]
+    , [ [ EText TextNormal "ultri" ] , [ ESymbol Ord "\9720" ] ]
+    , [ [ EText TextNormal "umacr" ] , [ ESymbol Ord "\363" ] ]
+    , [ [ EText TextNormal "Umacr" ] , [ ESymbol Ord "\362" ] ]
+    , [ [ EText TextNormal "uml" ] , [ ESymbol Accent "\168" ] ]
+    , [ [ EText TextNormal "UnderBar" ] , [ ESymbol Ord "_" ] ]
+    , [ [ EText TextNormal "UnderBrace" ]
+      , [ ESymbol Accent "\9183" ]
       ]
-    , [ [ EText TextNormal "0" ]
-      , [ ESymbol Accent "\768" ]
-      , [ ESymbol Accent "\784" ]
-      , [ ESymbol Ord "\800" ]
-      , [ ESymbol Accent "\816" ]
-      , [ ESymbol Ord "\832" ]
-      , [ ESymbol Ord "\848" ]
-      , [ ESymbol Ord "\864" ]
+    , [ [ EText TextNormal "UnderBracket" ]
+      , [ ESymbol Accent "\9141" ]
       ]
-    , [ [ EText TextNormal "1" ]
-      , [ ESymbol Accent "\769" ]
-      , [ ESymbol Accent "\785" ]
-      , [ ESymbol Ord "\801" ]
-      , [ ESymbol Accent "\817" ]
-      , [ ESymbol Ord "\833" ]
-      , [ ESymbol Ord "\849" ]
-      , [ ESymbol Ord "\865" ]
+    , [ [ EText TextNormal "UnderParenthesis" ]
+      , [ ESymbol Accent "\9181" ]
       ]
-    , [ [ EText TextNormal "2" ]
-      , [ ESymbol Accent "\770" ]
-      , [ ESymbol Accent "\786" ]
-      , [ ESymbol Ord "\802" ]
-      , [ ESymbol Accent "\818" ]
-      , [ ESymbol Ord "\834" ]
-      , [ ESymbol Ord "\850" ]
-      , [ ESymbol Ord "\866" ]
+    , [ [ EText TextNormal "Union" ] , [ ESymbol Op "\8899" ] ]
+    , [ [ EText TextNormal "UnionPlus" ] , [ ESymbol Bin "\8846" ] ]
+    , [ [ EText TextNormal "uogon" ] , [ ESymbol Ord "\371" ] ]
+    , [ [ EText TextNormal "Uogon" ] , [ ESymbol Ord "\370" ] ]
+    , [ [ EText TextNormal "uopf" ] , [ ESymbol Alpha "\120166" ] ]
+    , [ [ EText TextNormal "Uopf" ] , [ ESymbol Alpha "\120140" ] ]
+    , [ [ EText TextNormal "uparrow" ] , [ ESymbol Rel "\8593" ] ]
+    , [ [ EText TextNormal "Uparrow" ] , [ ESymbol Rel "\8657" ] ]
+    , [ [ EText TextNormal "UpArrow" ] , [ ESymbol Rel "\8593" ] ]
+    , [ [ EText TextNormal "UpArrowBar" ] , [ ESymbol Rel "\10514" ] ]
+    , [ [ EText TextNormal "UpArrowDownArrow" ]
+      , [ ESymbol Rel "\8645" ]
       ]
-    , [ [ EText TextNormal "3" ]
-      , [ ESymbol Accent "\771" ]
-      , [ ESymbol Ord "\787" ]
-      , [ ESymbol Accent "\803" ]
-      , [ ESymbol Accent "\819" ]
-      , [ ESymbol Ord "\835" ]
-      , [ ESymbol Ord "\851" ]
-      , [ ESymbol Ord "\867" ]
+    , [ [ EText TextNormal "updownarrow" ] , [ ESymbol Rel "\8597" ] ]
+    , [ [ EText TextNormal "Updownarrow" ] , [ ESymbol Rel "\8661" ] ]
+    , [ [ EText TextNormal "UpDownArrow" ] , [ ESymbol Rel "\8597" ] ]
+    , [ [ EText TextNormal "UpEquilibrium" ]
+      , [ ESymbol Rel "\10606" ]
       ]
-    , [ [ EText TextNormal "4" ]
-      , [ ESymbol Accent "\772" ]
-      , [ ESymbol Ord "\788" ]
-      , [ ESymbol Ord "\804" ]
-      , [ ESymbol Ord "\820" ]
-      , [ ESymbol Ord "\836" ]
-      , [ ESymbol Ord "\852" ]
-      , [ ESymbol Ord "\868" ]
+    , [ [ EText TextNormal "upharpoonleft" ]
+      , [ ESymbol Rel "\8639" ]
       ]
-    , [ [ EText TextNormal "5" ]
-      , [ ESymbol Accent "\773" ]
-      , [ ESymbol Accent "\789" ]
-      , [ ESymbol Ord "\805" ]
-      , [ ESymbol Ord "\821" ]
-      , [ ESymbol Ord "\837" ]
-      , [ ESymbol Ord "\853" ]
-      , [ ESymbol Ord "\869" ]
+    , [ [ EText TextNormal "upharpoonright" ]
+      , [ ESymbol Rel "\8638" ]
       ]
-    , [ [ EText TextNormal "6" ]
-      , [ ESymbol Accent "\774" ]
-      , [ ESymbol Ord "\790" ]
-      , [ ESymbol Ord "\806" ]
-      , [ ESymbol Ord "\822" ]
-      , [ ESymbol Accent "\838" ]
-      , [ ESymbol Ord "\854" ]
-      , [ ESymbol Ord "\870" ]
+    , [ [ EText TextNormal "uplus" ] , [ ESymbol Bin "\8846" ] ]
+    , [ [ EText TextNormal "UpperLeftArrow" ]
+      , [ ESymbol Rel "\8598" ]
       ]
-    , [ [ EText TextNormal "7" ]
-      , [ ESymbol Accent "\775" ]
-      , [ ESymbol Ord "\791" ]
-      , [ ESymbol Ord "\807" ]
-      , [ ESymbol Ord "\823" ]
-      , [ ESymbol Ord "\839" ]
-      , [ ESymbol Ord "\855" ]
-      , [ ESymbol Ord "\871" ]
+    , [ [ EText TextNormal "UpperRightArrow" ]
+      , [ ESymbol Rel "\8599" ]
       ]
-    , [ [ EText TextNormal "8" ]
-      , [ ESymbol Accent "\776" ]
-      , [ ESymbol Ord "\792" ]
-      , [ ESymbol Ord "\808" ]
-      , [ ESymbol Accent "\824" ]
-      , [ ESymbol Ord "\840" ]
-      , [ ESymbol Ord "\856" ]
-      , [ ESymbol Ord "\872" ]
-      ]
-    , [ [ EText TextNormal "9" ]
-      , [ ESymbol Accent "\777" ]
-      , [ ESymbol Ord "\793" ]
-      , [ ESymbol Ord "\809" ]
-      , [ ESymbol Ord "\825" ]
-      , [ ESymbol Ord "\841" ]
-      , [ ESymbol Ord "\857" ]
-      , [ ESymbol Ord "\873" ]
-      ]
-    , [ [ EText TextNormal "A" ]
-      , [ ESymbol Accent "\778" ]
-      , [ ESymbol Accent "\794" ]
-      , [ ESymbol Ord "\810" ]
-      , [ ESymbol Accent "\826" ]
-      , [ ESymbol Ord "\842" ]
-      , [ ESymbol Ord "\858" ]
-      , [ ESymbol Ord "\874" ]
-      ]
-    , [ [ EText TextNormal "B" ]
-      , [ ESymbol Ord "\779" ]
-      , [ ESymbol Ord "\795" ]
-      , [ ESymbol Ord "\811" ]
-      , [ ESymbol Ord "\827" ]
-      , [ ESymbol Ord "\843" ]
-      , [ ESymbol Ord "\859" ]
-      , [ ESymbol Ord "\875" ]
-      ]
-    , [ [ EText TextNormal "C" ]
-      , [ ESymbol Accent "\780" ]
-      , [ ESymbol Ord "\796" ]
-      , [ ESymbol Accent "\812" ]
-      , [ ESymbol Ord "\828" ]
-      , [ ESymbol Ord "\844" ]
-      , [ ESymbol Ord "\860" ]
-      , [ ESymbol Ord "\876" ]
-      ]
-    , [ [ EText TextNormal "D" ]
-      , [ ESymbol Ord "\781" ]
-      , [ ESymbol Ord "\797" ]
-      , [ ESymbol Accent "\813" ]
-      , [ ESymbol Ord "\829" ]
-      , [ ESymbol Ord "\845" ]
-      , [ ESymbol Ord "\861" ]
-      , [ ESymbol Ord "\877" ]
-      ]
-    , [ [ EText TextNormal "E" ]
-      , [ ESymbol Ord "\782" ]
-      , [ ESymbol Ord "\798" ]
-      , [ ESymbol Accent "\814" ]
-      , [ ESymbol Ord "\830" ]
-      , [ ESymbol Ord "\846" ]
-      , [ ESymbol Ord "\862" ]
-      , [ ESymbol Ord "\878" ]
-      ]
-    , [ [ EText TextNormal "F" ]
-      , [ ESymbol Ord "\783" ]
-      , [ ESymbol Ord "\799" ]
-      , [ ESymbol Accent "\815" ]
-      , [ ESymbol Accent "\831" ]
-      , [ ESymbol Ord "\847" ]
-      , [ ESymbol Ord "\863" ]
-      , [ ESymbol Ord "\879" ]
-      ]
+    , [ [ EText TextNormal "upsi" ] , [ ESymbol Alpha "\965" ] ]
+    , [ [ EText TextNormal "Upsi" ] , [ ESymbol Alpha "\978" ] ]
+    , [ [ EText TextNormal "upsilon" ] , [ ESymbol Alpha "\965" ] ]
+    , [ [ EText TextNormal "Upsilon" ] , [ ESymbol Alpha "\933" ] ]
+    , [ [ EText TextNormal "UpTee" ] , [ ESymbol Ord "\8869" ] ]
+    , [ [ EText TextNormal "UpTeeArrow" ] , [ ESymbol Rel "\8613" ] ]
+    , [ [ EText TextNormal "upuparrows" ] , [ ESymbol Rel "\8648" ] ]
+    , [ [ EText TextNormal "urcorn" ] , [ ESymbol Close "\8989" ] ]
+    , [ [ EText TextNormal "urcorner" ] , [ ESymbol Close "\8989" ] ]
+    , [ [ EText TextNormal "urcrop" ] , [ ESymbol Ord "\8974" ] ]
+    , [ [ EText TextNormal "uring" ] , [ ESymbol Ord "\367" ] ]
+    , [ [ EText TextNormal "Uring" ] , [ ESymbol Ord "\366" ] ]
+    , [ [ EText TextNormal "urtri" ] , [ ESymbol Ord "\9721" ] ]
+    , [ [ EText TextNormal "uscr" ] , [ ESymbol Alpha "\120010" ] ]
+    , [ [ EText TextNormal "Uscr" ] , [ ESymbol Alpha "\119984" ] ]
+    , [ [ EText TextNormal "utdot" ] , [ ESymbol Rel "\8944" ] ]
+    , [ [ EText TextNormal "utilde" ] , [ ESymbol Ord "\361" ] ]
+    , [ [ EText TextNormal "Utilde" ] , [ ESymbol Ord "\360" ] ]
+    , [ [ EText TextNormal "utri" ] , [ ESymbol Bin "\9653" ] ]
+    , [ [ EText TextNormal "utrif" ] , [ ESymbol Bin "\9652" ] ]
+    , [ [ EText TextNormal "uuarr" ] , [ ESymbol Rel "\8648" ] ]
+    , [ [ EText TextNormal "uuml" ] , [ ESymbol Ord "\252" ] ]
+    , [ [ EText TextNormal "Uuml" ] , [ ESymbol Ord "\220" ] ]
+    , [ [ EText TextNormal "uwangle" ] , [ ESymbol Ord "\10663" ] ]
     ]
 ]
 
-
 tex:
 \begin{matrix}
- & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
-\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
-\text{1} & \acute{} & ̑ & ̡ & \underbar & ́ & ͑ & ͡ \\
-\text{2} & \hat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
-\text{3} & \tilde{} & ̓ & ̣ & ̳{} & ̓ & ͓ & ͣ \\
-\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
-\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
-\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
-\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
-\text{8} & \ddot{} & ̘ & ̨ & \not & ͈ & ͘ & ͨ \\
-\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
-\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
-\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
-\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
-\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
-\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
-\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
+\text{uacute} & ú \\
+\text{Uacute} & Ú \\
+\text{uarr} & \uparrow \\
+\text{uArr} & \Uparrow \\
+\text{Uarr} & ↟ \\
+\text{Uarrocir} & ⥉ \\
+\text{ubrcy} & ў \\
+\text{Ubrcy} & Ў \\
+\text{ubreve} & ŭ \\
+\text{Ubreve} & Ŭ \\
+\text{ucirc} & û \\
+\text{Ucirc} & Û \\
+\text{ucy} & у \\
+\text{Ucy} & У \\
+\text{udarr} & ⇅ \\
+\text{udblac} & ű \\
+\text{Udblac} & Ű \\
+\text{udhar} & ⥮ \\
+\text{ufisht} & ⥾ \\
+\text{ufr} & \mathfrak{u} \\
+\text{Ufr} & \mathfrak{U} \\
+\text{ugrave} & ù \\
+\text{Ugrave} & Ù \\
+\text{uHar} & ⥣ \\
+\text{uharl} & \upharpoonleft \\
+\text{uharr} & \upharpoonright \\
+\text{uhblk} & ▀ \\
+\text{ulcorn} & ⌜ \\
+\text{ulcorner} & ⌜ \\
+\text{ulcrop} & ⌏ \\
+\text{ultri} & ◸ \\
+\text{umacr} & ū \\
+\text{Umacr} & Ū \\
+\text{uml} & ¨ \\
+\text{UnderBar} & \_ \\
+\text{UnderBrace} & \underbrace \\
+\text{UnderBracket} & ⎵ \\
+\text{UnderParenthesis} & ⏝ \\
+\text{Union} & \bigcup \\
+\text{UnionPlus} & \uplus \\
+\text{uogon} & ų \\
+\text{Uogon} & Ų \\
+\text{uopf} & \mathbb{u} \\
+\text{Uopf} & \mathbb{U} \\
+\text{uparrow} & \uparrow \\
+\text{Uparrow} & \Uparrow \\
+\text{UpArrow} & \uparrow \\
+\text{UpArrowBar} & ⤒ \\
+\text{UpArrowDownArrow} & ⇅ \\
+\text{updownarrow} & \updownarrow \\
+\text{Updownarrow} & \Updownarrow \\
+\text{UpDownArrow} & \updownarrow \\
+\text{UpEquilibrium} & ⥮ \\
+\text{upharpoonleft} & \upharpoonleft \\
+\text{upharpoonright} & \upharpoonright \\
+\text{uplus} & \uplus \\
+\text{UpperLeftArrow} & \nwarrow \\
+\text{UpperRightArrow} & \nearrow \\
+\text{upsi} & \upsilon \\
+\text{Upsi} & \mathrm{\Upsilon} \\
+\text{upsilon} & \upsilon \\
+\text{Upsilon} & \Upsilon \\
+\text{UpTee} & \bot \\
+\text{UpTeeArrow} & ↥ \\
+\text{upuparrows} & \upuparrows \\
+\text{urcorn} & ⌝ \\
+\text{urcorner} & ⌝ \\
+\text{urcrop} & ⌎ \\
+\text{uring} & ů \\
+\text{Uring} & Ů \\
+\text{urtri} & ◹ \\
+\text{uscr} & \mathcal{u} \\
+\text{Uscr} & \mathcal{U} \\
+\text{utdot} & ⋰ \\
+\text{utilde} & ũ \\
+\text{Utilde} & Ũ \\
+\text{utri} & \vartriangle \\
+\text{utrif} & ▴ \\
+\text{uuarr} & \upuparrows \\
+\text{uuml} & ü \\
+\text{Uuml} & Ü \\
+\text{uwangle} & ⦧
 \end{matrix}
 
 expect:
 \begin{matrix}
- & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
-\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
-\text{1} & \acute{} & ̑ & ̡ & \underbar{} & ́ & ͑ & ͡ \\
-\text{2} & \hat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
-\text{3} & \tilde{} & ̓ & ̣ & ̳ & ̓ & ͓ & ͣ \\
-\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
-\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
-\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
-\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
-\text{8} & \ddot{} & ̘ & ̨ & \not{} & ͈ & ͘ & ͨ \\
-\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
-\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
-\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
-\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
-\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
-\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
-\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
+\text{uacute} & ú \\
+\text{Uacute} & Ú \\
+\text{uarr} & \uparrow \\
+\text{uArr} & \Uparrow \\
+\text{Uarr} & ↟ \\
+\text{Uarrocir} & ⥉ \\
+\text{ubrcy} & ў \\
+\text{Ubrcy} & Ў \\
+\text{ubreve} & ŭ \\
+\text{Ubreve} & Ŭ \\
+\text{ucirc} & û \\
+\text{Ucirc} & Û \\
+\text{ucy} & у \\
+\text{Ucy} & У \\
+\text{udarr} & ⇅ \\
+\text{udblac} & ű \\
+\text{Udblac} & Ű \\
+\text{udhar} & ⥮ \\
+\text{ufisht} & ⥾ \\
+\text{ufr} & \mathfrak{u} \\
+\text{Ufr} & \mathfrak{U} \\
+\text{ugrave} & ù \\
+\text{Ugrave} & Ù \\
+\text{uHar} & ⥣ \\
+\text{uharl} & \upharpoonleft \\
+\text{uharr} & \upharpoonright \\
+\text{uhblk} & ▀ \\
+\text{ulcorn} & ⌜ \\
+\text{ulcorner} & ⌜ \\
+\text{ulcrop} & ⌏ \\
+\text{ultri} & ◸ \\
+\text{umacr} & ū \\
+\text{Umacr} & Ū \\
+\text{uml} & ¨ \\
+\text{UnderBar} & \_ \\
+\text{UnderBrace} & \underbrace{} \\
+\text{UnderBracket} & ⎵ \\
+\text{UnderParenthesis} & ⏝ \\
+\text{Union} & \bigcup \\
+\text{UnionPlus} & \uplus \\
+\text{uogon} & ų \\
+\text{Uogon} & Ų \\
+\text{uopf} & \mathbb{u} \\
+\text{Uopf} & \mathbb{U} \\
+\text{uparrow} & \uparrow \\
+\text{Uparrow} & \Uparrow \\
+\text{UpArrow} & \uparrow \\
+\text{UpArrowBar} & ⤒ \\
+\text{UpArrowDownArrow} & ⇅ \\
+\text{updownarrow} & \updownarrow \\
+\text{Updownarrow} & \Updownarrow \\
+\text{UpDownArrow} & \updownarrow \\
+\text{UpEquilibrium} & ⥮ \\
+\text{upharpoonleft} & \upharpoonleft \\
+\text{upharpoonright} & \upharpoonright \\
+\text{uplus} & \uplus \\
+\text{UpperLeftArrow} & \nwarrow \\
+\text{UpperRightArrow} & \nearrow \\
+\text{upsi} & \upsilon \\
+\text{Upsi} & \mathrm{\Upsilon} \\
+\text{upsilon} & \upsilon \\
+\text{Upsilon} & \Upsilon \\
+\text{UpTee} & \bot \\
+\text{UpTeeArrow} & ↥ \\
+\text{upuparrows} & \upuparrows \\
+\text{urcorn} & ⌝ \\
+\text{urcorner} & ⌝ \\
+\text{urcrop} & ⌎ \\
+\text{uring} & ů \\
+\text{Uring} & Ů \\
+\text{urtri} & ◹ \\
+\text{uscr} & \mathcal{u} \\
+\text{Uscr} & \mathcal{U} \\
+\text{utdot} & ⋰ \\
+\text{utilde} & ũ \\
+\text{Utilde} & Ũ \\
+\text{utri} & \vartriangle \\
+\text{utrif} & ▴ \\
+\text{uuarr} & \upuparrows \\
+\text{uuml} & ü \\
+\text{Uuml} & Ü \\
+\text{uwangle} & ⦧
 \end{matrix}
 
 texmath:
-\begin{matrix}
- & \text{30} & \text{31} & \text{32} & \text{33} & \text{34} & \text{35} & \text{36} \\
-\text{0} & \grave{} & ̐ & ̠ & ̰ & ̀ & ͐ & ͠ \\
-\text{1} & \acute{} & ̑ & ̡ & \underset{\underbar{}}{\&}́ & ͑ & ͡ \\
-\text{2} & \widehat{} & ̒ & ̢ & \underline{} & ͂ & ͒ & ͢ \\
-\text{3} & \widetilde{} & ̓ & ̣ & ̳{} & ̓ & ͓ & ͣ \\
-\text{4} & \bar{} & ̔ & ̤ & ̴ & ̈́ & ͔ & ͤ \\
-\text{5} & \overline{} & ̕ & ̥ & ̵ & ͅ & ͕ & ͥ \\
-\text{6} & \breve{} & ̖ & ̦ & ̶ & ͆ & ͖ & ͦ \\
-\text{7} & \dot{} & ̗ & ̧ & ̷ & ͇ & ͗ & ͧ \\
-\text{8} & \ddot{} & ̘ & ̨ & {\&\not{}}͈ & ͘ & ͨ \\
-\text{9} & ̉ & ̙ & ̩ & ̹ & ͉ & ͙ & ͩ \\
-\text{A} & \mathring{} & ̚ & ̪ & ̺ & ͊ & ͚ & ͪ \\
-\text{B} & ̋ & ̛ & ̫ & ̻ & ͋ & ͛ & ͫ \\
-\text{C} & \check{} & ̜ & ̬ & ̼ & ͌ & ͜ & ͬ \\
-\text{D} & ̍ & ̝ & ̭ & ̽ & ͍ & ͝ & ͭ \\
-\text{E} & ̎ & ̞ & ̮ & ̾ & ͎ & ͞ & ͮ \\
-\text{F} & ̏ & ̟ & ̯ & ̿ & ͏ & ͟ & ͯ
-\end{matrix}
 
+
+5c 62 65 67 69 6e 7b 6d 61 74 72 69 78 7d 0a 5c 74 65 78 74 7b 75 61 63 75 74 65 7d 20 26 20 fa 20 5c 5c 0a 5c 74 65 78 74 7b 55 61 63 75 74 65 7d 20 26 20 da 20 5c 5c 0a 5c 74 65 78 74 7b 75 61 72 72 7d 20 26 20 5c 75 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 75 41 72 72 7d 20 26 20 5c 55 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 61 72 72 7d 20 26 20 9f 20 5c 5c 0a 5c 74 65 78 74 7b 55 61 72 72 6f 63 69 72 7d 20 26 20 49 20 5c 5c 0a 5c 74 65 78 74 7b 75 62 72 63 79 7d 20 26 20 5e 20 5c 5c 0a 5c 74 65 78 74 7b 55 62 72 63 79 7d 20 26 20 0e 20 5c 5c 0a 5c 74 65 78 74 7b 75 62 72 65 76 65 7d 20 26 20 6d 20 5c 5c 0a 5c 74 65 78 74 7b 55 62 72 65 76 65 7d 20 26 20 6c 20 5c 5c 0a 5c 74 65 78 74 7b 75 63 69 72 63 7d 20 26 20 fb 20 5c 5c 0a 5c 74 65 78 74 7b 55 63 69 72 63 7d 20 26 20 db 20 5c 5c 0a 5c 74 65 78 74 7b 75 63 79 7d 20 26 20 43 20 5c 5c 0a 5c 74 65 78 74 7b 55 63 79 7d 20 26 20 23 20 5c 5c 0a 5c 74 65 78 74 7b 75 64 61 72 72 7d 20 26 20 c5 20 5c 5c 0a 5c 74 65 78 74 7b 75 64 62 6c 61 63 7d 20 26 20 71 20 5c 5c 0a 5c 74 65 78 74 7b 55 64 62 6c 61 63 7d 20 26 20 70 20 5c 5c 0a 5c 74 65 78 74 7b 75 64 68 61 72 7d 20 26 20 6e 20 5c 5c 0a 5c 74 65 78 74 7b 75 66 69 73 68 74 7d 20 26 20 7e 20 5c 5c 0a 5c 74 65 78 74 7b 75 66 72 7d 20 26 20 5c 6d 61 74 68 66 72 61 6b 7b 75 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 66 72 7d 20 26 20 5c 6d 61 74 68 66 72 61 6b 7b 55 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 67 72 61 76 65 7d 20 26 20 f9 20 5c 5c 0a 5c 74 65 78 74 7b 55 67 72 61 76 65 7d 20 26 20 d9 20 5c 5c 0a 5c 74 65 78 74 7b 75 48 61 72 7d 20 26 20 63 20 5c 5c 0a 5c 74 65 78 74 7b 75 68 61 72 6c 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 6c 65 66 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 68 61 72 72 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 72 69 67 68 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 68 62 6c 6b 7d 20 26 20 80 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 63 6f 72 6e 7d 20 26 20 1c 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 63 6f 72 6e 65 72 7d 20 26 20 1c 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 63 72 6f 70 7d 20 26 20 0f 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 74 72 69 7d 20 26 20 f8 20 5c 5c 0a 5c 74 65 78 74 7b 75 6d 61 63 72 7d 20 26 20 6b 20 5c 5c 0a 5c 74 65 78 74 7b 55 6d 61 63 72 7d 20 26 20 6a 20 5c 5c 0a 5c 74 65 78 74 7b 75 6d 6c 7d 20 26 20 a8 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 42 61 72 7d 20 26 20 5c 5f 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 42 72 61 63 65 7d 20 26 20 5c 75 6e 64 65 72 62 72 61 63 65 7b 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 42 72 61 63 6b 65 74 7d 20 26 20 b5 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 50 61 72 65 6e 74 68 65 73 69 73 7d 20 26 20 dd 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 69 6f 6e 7d 20 26 20 5c 62 69 67 63 75 70 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 69 6f 6e 50 6c 75 73 7d 20 26 20 5c 75 70 6c 75 73 20 5c 5c 0a 5c 74 65 78 74 7b 75 6f 67 6f 6e 7d 20 26 20 73 20 5c 5c 0a 5c 74 65 78 74 7b 55 6f 67 6f 6e 7d 20 26 20 72 20 5c 5c 0a 5c 74 65 78 74 7b 75 6f 70 66 7d 20 26 20 5c 6d 61 74 68 62 62 7b 75 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 6f 70 66 7d 20 26 20 5c 6d 61 74 68 62 62 7b 55 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 61 72 72 6f 77 7d 20 26 20 5c 75 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 61 72 72 6f 77 7d 20 26 20 5c 55 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 41 72 72 6f 77 7d 20 26 20 5c 75 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 41 72 72 6f 77 42 61 72 7d 20 26 20 12 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 41 72 72 6f 77 44 6f 77 6e 41 72 72 6f 77 7d 20 26 20 c5 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 64 6f 77 6e 61 72 72 6f 77 7d 20 26 20 5c 75 70 64 6f 77 6e 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 64 6f 77 6e 61 72 72 6f 77 7d 20 26 20 5c 55 70 64 6f 77 6e 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 44 6f 77 6e 41 72 72 6f 77 7d 20 26 20 5c 75 70 64 6f 77 6e 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 45 71 75 69 6c 69 62 72 69 75 6d 7d 20 26 20 6e 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 68 61 72 70 6f 6f 6e 6c 65 66 74 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 6c 65 66 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 68 61 72 70 6f 6f 6e 72 69 67 68 74 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 72 69 67 68 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 6c 75 73 7d 20 26 20 5c 75 70 6c 75 73 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 70 65 72 4c 65 66 74 41 72 72 6f 77 7d 20 26 20 5c 6e 77 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 70 65 72 52 69 67 68 74 41 72 72 6f 77 7d 20 26 20 5c 6e 65 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 73 69 7d 20 26 20 5c 75 70 73 69 6c 6f 6e 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 73 69 7d 20 26 20 5c 6d 61 74 68 72 6d 7b 5c 55 70 73 69 6c 6f 6e 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 73 69 6c 6f 6e 7d 20 26 20 5c 75 70 73 69 6c 6f 6e 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 73 69 6c 6f 6e 7d 20 26 20 5c 55 70 73 69 6c 6f 6e 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 54 65 65 7d 20 26 20 5c 62 6f 74 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 54 65 65 41 72 72 6f 77 7d 20 26 20 a5 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 75 70 61 72 72 6f 77 73 7d 20 26 20 5c 75 70 75 70 61 72 72 6f 77 73 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 63 6f 72 6e 7d 20 26 20 1d 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 63 6f 72 6e 65 72 7d 20 26 20 1d 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 63 72 6f 70 7d 20 26 20 0e 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 69 6e 67 7d 20 26 20 6f 20 5c 5c 0a 5c 74 65 78 74 7b 55 72 69 6e 67 7d 20 26 20 6e 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 74 72 69 7d 20 26 20 f9 20 5c 5c 0a 5c 74 65 78 74 7b 75 73 63 72 7d 20 26 20 5c 6d 61 74 68 63 61 6c 7b 75 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 73 63 72 7d 20 26 20 5c 6d 61 74 68 63 61 6c 7b 55 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 64 6f 74 7d 20 26 20 f0 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 69 6c 64 65 7d 20 26 20 69 20 5c 5c 0a 5c 74 65 78 74 7b 55 74 69 6c 64 65 7d 20 26 20 68 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 72 69 7d 20 26 20 5c 76 61 72 74 72 69 61 6e 67 6c 65 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 72 69 66 7d 20 26 20 b4 20 5c 5c 0a 5c 74 65 78 74 7b 75 75 61 72 72 7d 20 26 20 5c 75 70 75 70 61 72 72 6f 77 73 20 5c 5c 0a 5c 74 65 78 74 7b 75 75 6d 6c 7d 20 26 20 fc 20 5c 5c 0a 5c 74 65 78 74 7b 55 75 6d 6c 7d 20 26 20 dc 20 5c 5c 0a 5c 74 65 78 74 7b 75 77 61 6e 67 6c 65 7d 20 26 20 a7 0a 5c 65 6e 64 7b 6d 61 74 72 69 78 7d 
+\  b  e  g  i  n  {  m  a  t  r  i  x  }  \n \  t  e  x  t  {  u  a  c  u  t  e  }     &     ú     \  \  \n \  t  e  x  t  {  U  a  c  u  t  e  }     &     Ú     \  \  \n \  t  e  x  t  {  u  a  r  r  }     &     \  u  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  u  A  r  r  }     &     \  U  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  a  r  r  }     &     ↟     \  \  \n \  t  e  x  t  {  U  a  r  r  o  c  i  r  }     &     ⥉     \  \  \n \  t  e  x  t  {  u  b  r  c  y  }     &     ў     \  \  \n \  t  e  x  t  {  U  b  r  c  y  }     &     Ў     \  \  \n \  t  e  x  t  {  u  b  r  e  v  e  }     &     ŭ     \  \  \n \  t  e  x  t  {  U  b  r  e  v  e  }     &     Ŭ     \  \  \n \  t  e  x  t  {  u  c  i  r  c  }     &     û     \  \  \n \  t  e  x  t  {  U  c  i  r  c  }     &     Û     \  \  \n \  t  e  x  t  {  u  c  y  }     &     у     \  \  \n \  t  e  x  t  {  U  c  y  }     &     У     \  \  \n \  t  e  x  t  {  u  d  a  r  r  }     &     ⇅     \  \  \n \  t  e  x  t  {  u  d  b  l  a  c  }     &     ű     \  \  \n \  t  e  x  t  {  U  d  b  l  a  c  }     &     Ű     \  \  \n \  t  e  x  t  {  u  d  h  a  r  }     &     ⥮     \  \  \n \  t  e  x  t  {  u  f  i  s  h  t  }     &     ⥾     \  \  \n \  t  e  x  t  {  u  f  r  }     &     \  m  a  t  h  f  r  a  k  {  u  }     \  \  \n \  t  e  x  t  {  U  f  r  }     &     \  m  a  t  h  f  r  a  k  {  U  }     \  \  \n \  t  e  x  t  {  u  g  r  a  v  e  }     &     ù     \  \  \n \  t  e  x  t  {  U  g  r  a  v  e  }     &     Ù     \  \  \n \  t  e  x  t  {  u  H  a  r  }     &     ⥣     \  \  \n \  t  e  x  t  {  u  h  a  r  l  }     &     \  u  p  h  a  r  p  o  o  n  l  e  f  t     \  \  \n \  t  e  x  t  {  u  h  a  r  r  }     &     \  u  p  h  a  r  p  o  o  n  r  i  g  h  t     \  \  \n \  t  e  x  t  {  u  h  b  l  k  }     &     ▀     \  \  \n \  t  e  x  t  {  u  l  c  o  r  n  }     &     ⌜     \  \  \n \  t  e  x  t  {  u  l  c  o  r  n  e  r  }     &     ⌜     \  \  \n \  t  e  x  t  {  u  l  c  r  o  p  }     &     ⌏     \  \  \n \  t  e  x  t  {  u  l  t  r  i  }     &     ◸     \  \  \n \  t  e  x  t  {  u  m  a  c  r  }     &     ū     \  \  \n \  t  e  x  t  {  U  m  a  c  r  }     &     Ū     \  \  \n \  t  e  x  t  {  u  m  l  }     &     ¨     \  \  \n \  t  e  x  t  {  U  n  d  e  r  B  a  r  }     &     \  _     \  \  \n \  t  e  x  t  {  U  n  d  e  r  B  r  a  c  e  }     &     \  u  n  d  e  r  b  r  a  c  e  {  }     \  \  \n \  t  e  x  t  {  U  n  d  e  r  B  r  a  c  k  e  t  }     &     ⎵     \  \  \n \  t  e  x  t  {  U  n  d  e  r  P  a  r  e  n  t  h  e  s  i  s  }     &     ⏝     \  \  \n \  t  e  x  t  {  U  n  i  o  n  }     &     \  b  i  g  c  u  p     \  \  \n \  t  e  x  t  {  U  n  i  o  n  P  l  u  s  }     &     \  u  p  l  u  s     \  \  \n \  t  e  x  t  {  u  o  g  o  n  }     &     ų     \  \  \n \  t  e  x  t  {  U  o  g  o  n  }     &     Ų     \  \  \n \  t  e  x  t  {  u  o  p  f  }     &     \  m  a  t  h  b  b  {  u  }     \  \  \n \  t  e  x  t  {  U  o  p  f  }     &     \  m  a  t  h  b  b  {  U  }     \  \  \n \  t  e  x  t  {  u  p  a  r  r  o  w  }     &     \  u  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  a  r  r  o  w  }     &     \  U  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  A  r  r  o  w  }     &     \  u  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  A  r  r  o  w  B  a  r  }     &     ⤒     \  \  \n \  t  e  x  t  {  U  p  A  r  r  o  w  D  o  w  n  A  r  r  o  w  }     &     ⇅     \  \  \n \  t  e  x  t  {  u  p  d  o  w  n  a  r  r  o  w  }     &     \  u  p  d  o  w  n  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  d  o  w  n  a  r  r  o  w  }     &     \  U  p  d  o  w  n  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  D  o  w  n  A  r  r  o  w  }     &     \  u  p  d  o  w  n  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  E  q  u  i  l  i  b  r  i  u  m  }     &     ⥮     \  \  \n \  t  e  x  t  {  u  p  h  a  r  p  o  o  n  l  e  f  t  }     &     \  u  p  h  a  r  p  o  o  n  l  e  f  t     \  \  \n \  t  e  x  t  {  u  p  h  a  r  p  o  o  n  r  i  g  h  t  }     &     \  u  p  h  a  r  p  o  o  n  r  i  g  h  t     \  \  \n \  t  e  x  t  {  u  p  l  u  s  }     &     \  u  p  l  u  s     \  \  \n \  t  e  x  t  {  U  p  p  e  r  L  e  f  t  A  r  r  o  w  }     &     \  n  w  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  p  e  r  R  i  g  h  t  A  r  r  o  w  }     &     \  n  e  a  r  r  o  w     \  \  \n \  t  e  x  t  {  u  p  s  i  }     &     \  u  p  s  i  l  o  n     \  \  \n \  t  e  x  t  {  U  p  s  i  }     &     \  m  a  t  h  r  m  {  \  U  p  s  i  l  o  n  }     \  \  \n \  t  e  x  t  {  u  p  s  i  l  o  n  }     &     \  u  p  s  i  l  o  n     \  \  \n \  t  e  x  t  {  U  p  s  i  l  o  n  }     &     \  U  p  s  i  l  o  n     \  \  \n \  t  e  x  t  {  U  p  T  e  e  }     &     \  b  o  t     \  \  \n \  t  e  x  t  {  U  p  T  e  e  A  r  r  o  w  }     &     ↥     \  \  \n \  t  e  x  t  {  u  p  u  p  a  r  r  o  w  s  }     &     \  u  p  u  p  a  r  r  o  w  s     \  \  \n \  t  e  x  t  {  u  r  c  o  r  n  }     &     ⌝     \  \  \n \  t  e  x  t  {  u  r  c  o  r  n  e  r  }     &     ⌝     \  \  \n \  t  e  x  t  {  u  r  c  r  o  p  }     &     ⌎     \  \  \n \  t  e  x  t  {  u  r  i  n  g  }     &     ů     \  \  \n \  t  e  x  t  {  U  r  i  n  g  }     &     Ů     \  \  \n \  t  e  x  t  {  u  r  t  r  i  }     &     ◹     \  \  \n \  t  e  x  t  {  u  s  c  r  }     &     \  m  a  t  h  c  a  l  {  u  }     \  \  \n \  t  e  x  t  {  U  s  c  r  }     &     \  m  a  t  h  c  a  l  {  U  }     \  \  \n \  t  e  x  t  {  u  t  d  o  t  }     &     ⋰     \  \  \n \  t  e  x  t  {  u  t  i  l  d  e  }     &     ũ     \  \  \n \  t  e  x  t  {  U  t  i  l  d  e  }     &     Ũ     \  \  \n \  t  e  x  t  {  u  t  r  i  }     &     \  v  a  r  t  r  i  a  n  g  l  e     \  \  \n \  t  e  x  t  {  u  t  r  i  f  }     &     ▴     \  \  \n \  t  e  x  t  {  u  u  a  r  r  }     &     \  u  p  u  p  a  r  r  o  w  s     \  \  \n \  t  e  x  t  {  u  u  m  l  }     &     ü     \  \  \n \  t  e  x  t  {  U  u  m  l  }     &     Ü     \  \  \n \  t  e  x  t  {  u  w  a  n  g  l  e  }     &     ⦧  \n \  e  n  d  {  m  a  t  r  i  x  }  
+5c 62 65 67 69 6e 7b 6d 61 74 72 69 78 7d 0a 5c 74 65 78 74 7b 75 61 63 75 74 65 7d 20 26 20 fa 20 5c 5c 0a 5c 74 65 78 74 7b 55 61 63 75 74 65 7d 20 26 20 da 20 5c 5c 0a 5c 74 65 78 74 7b 75 61 72 72 7d 20 26 20 5c 75 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 75 41 72 72 7d 20 26 20 5c 55 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 61 72 72 7d 20 26 20 9f 20 5c 5c 0a 5c 74 65 78 74 7b 55 61 72 72 6f 63 69 72 7d 20 26 20 49 20 5c 5c 0a 5c 74 65 78 74 7b 75 62 72 63 79 7d 20 26 20 5e 20 5c 5c 0a 5c 74 65 78 74 7b 55 62 72 63 79 7d 20 26 20 0e 20 5c 5c 0a 5c 74 65 78 74 7b 75 62 72 65 76 65 7d 20 26 20 6d 20 5c 5c 0a 5c 74 65 78 74 7b 55 62 72 65 76 65 7d 20 26 20 6c 20 5c 5c 0a 5c 74 65 78 74 7b 75 63 69 72 63 7d 20 26 20 fb 20 5c 5c 0a 5c 74 65 78 74 7b 55 63 69 72 63 7d 20 26 20 db 20 5c 5c 0a 5c 74 65 78 74 7b 75 63 79 7d 20 26 20 43 20 5c 5c 0a 5c 74 65 78 74 7b 55 63 79 7d 20 26 20 23 20 5c 5c 0a 5c 74 65 78 74 7b 75 64 61 72 72 7d 20 26 20 c5 20 5c 5c 0a 5c 74 65 78 74 7b 75 64 62 6c 61 63 7d 20 26 20 71 20 5c 5c 0a 5c 74 65 78 74 7b 55 64 62 6c 61 63 7d 20 26 20 70 20 5c 5c 0a 5c 74 65 78 74 7b 75 64 68 61 72 7d 20 26 20 6e 20 5c 5c 0a 5c 74 65 78 74 7b 75 66 69 73 68 74 7d 20 26 20 7e 20 5c 5c 0a 5c 74 65 78 74 7b 75 66 72 7d 20 26 20 5c 6d 61 74 68 66 72 61 6b 7b 75 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 66 72 7d 20 26 20 5c 6d 61 74 68 66 72 61 6b 7b 55 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 67 72 61 76 65 7d 20 26 20 f9 20 5c 5c 0a 5c 74 65 78 74 7b 55 67 72 61 76 65 7d 20 26 20 d9 20 5c 5c 0a 5c 74 65 78 74 7b 75 48 61 72 7d 20 26 20 63 20 5c 5c 0a 5c 74 65 78 74 7b 75 68 61 72 6c 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 6c 65 66 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 68 61 72 72 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 72 69 67 68 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 68 62 6c 6b 7d 20 26 20 80 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 63 6f 72 6e 7d 20 26 20 1c 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 63 6f 72 6e 65 72 7d 20 26 20 1c 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 63 72 6f 70 7d 20 26 20 0f 20 5c 5c 0a 5c 74 65 78 74 7b 75 6c 74 72 69 7d 20 26 20 f8 20 5c 5c 0a 5c 74 65 78 74 7b 75 6d 61 63 72 7d 20 26 20 6b 20 5c 5c 0a 5c 74 65 78 74 7b 55 6d 61 63 72 7d 20 26 20 6a 20 5c 5c 0a 5c 74 65 78 74 7b 75 6d 6c 7d 20 26 20 a8 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 42 61 72 7d 20 26 20 5c 5f 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 42 72 61 63 65 7d 20 26 20 5c 75 6e 64 65 72 62 72 61 63 65 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 42 72 61 63 6b 65 74 7d 20 26 20 b5 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 64 65 72 50 61 72 65 6e 74 68 65 73 69 73 7d 20 26 20 dd 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 69 6f 6e 7d 20 26 20 5c 62 69 67 63 75 70 20 5c 5c 0a 5c 74 65 78 74 7b 55 6e 69 6f 6e 50 6c 75 73 7d 20 26 20 5c 75 70 6c 75 73 20 5c 5c 0a 5c 74 65 78 74 7b 75 6f 67 6f 6e 7d 20 26 20 73 20 5c 5c 0a 5c 74 65 78 74 7b 55 6f 67 6f 6e 7d 20 26 20 72 20 5c 5c 0a 5c 74 65 78 74 7b 75 6f 70 66 7d 20 26 20 5c 6d 61 74 68 62 62 7b 75 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 6f 70 66 7d 20 26 20 5c 6d 61 74 68 62 62 7b 55 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 61 72 72 6f 77 7d 20 26 20 5c 75 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 61 72 72 6f 77 7d 20 26 20 5c 55 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 41 72 72 6f 77 7d 20 26 20 5c 75 70 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 41 72 72 6f 77 42 61 72 7d 20 26 20 12 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 41 72 72 6f 77 44 6f 77 6e 41 72 72 6f 77 7d 20 26 20 c5 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 64 6f 77 6e 61 72 72 6f 77 7d 20 26 20 5c 75 70 64 6f 77 6e 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 64 6f 77 6e 61 72 72 6f 77 7d 20 26 20 5c 55 70 64 6f 77 6e 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 44 6f 77 6e 41 72 72 6f 77 7d 20 26 20 5c 75 70 64 6f 77 6e 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 45 71 75 69 6c 69 62 72 69 75 6d 7d 20 26 20 6e 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 68 61 72 70 6f 6f 6e 6c 65 66 74 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 6c 65 66 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 68 61 72 70 6f 6f 6e 72 69 67 68 74 7d 20 26 20 5c 75 70 68 61 72 70 6f 6f 6e 72 69 67 68 74 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 6c 75 73 7d 20 26 20 5c 75 70 6c 75 73 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 70 65 72 4c 65 66 74 41 72 72 6f 77 7d 20 26 20 5c 6e 77 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 70 65 72 52 69 67 68 74 41 72 72 6f 77 7d 20 26 20 5c 6e 65 61 72 72 6f 77 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 73 69 7d 20 26 20 5c 75 70 73 69 6c 6f 6e 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 73 69 7d 20 26 20 5c 6d 61 74 68 72 6d 7b 5c 55 70 73 69 6c 6f 6e 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 73 69 6c 6f 6e 7d 20 26 20 5c 75 70 73 69 6c 6f 6e 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 73 69 6c 6f 6e 7d 20 26 20 5c 55 70 73 69 6c 6f 6e 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 54 65 65 7d 20 26 20 5c 62 6f 74 20 5c 5c 0a 5c 74 65 78 74 7b 55 70 54 65 65 41 72 72 6f 77 7d 20 26 20 a5 20 5c 5c 0a 5c 74 65 78 74 7b 75 70 75 70 61 72 72 6f 77 73 7d 20 26 20 5c 75 70 75 70 61 72 72 6f 77 73 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 63 6f 72 6e 7d 20 26 20 1d 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 63 6f 72 6e 65 72 7d 20 26 20 1d 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 63 72 6f 70 7d 20 26 20 0e 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 69 6e 67 7d 20 26 20 6f 20 5c 5c 0a 5c 74 65 78 74 7b 55 72 69 6e 67 7d 20 26 20 6e 20 5c 5c 0a 5c 74 65 78 74 7b 75 72 74 72 69 7d 20 26 20 f9 20 5c 5c 0a 5c 74 65 78 74 7b 75 73 63 72 7d 20 26 20 5c 6d 61 74 68 63 61 6c 7b 75 7d 20 5c 5c 0a 5c 74 65 78 74 7b 55 73 63 72 7d 20 26 20 5c 6d 61 74 68 63 61 6c 7b 55 7d 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 64 6f 74 7d 20 26 20 f0 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 69 6c 64 65 7d 20 26 20 69 20 5c 5c 0a 5c 74 65 78 74 7b 55 74 69 6c 64 65 7d 20 26 20 68 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 72 69 7d 20 26 20 5c 76 61 72 74 72 69 61 6e 67 6c 65 20 5c 5c 0a 5c 74 65 78 74 7b 75 74 72 69 66 7d 20 26 20 b4 20 5c 5c 0a 5c 74 65 78 74 7b 75 75 61 72 72 7d 20 26 20 5c 75 70 75 70 61 72 72 6f 77 73 20 5c 5c 0a 5c 74 65 78 74 7b 75 75 6d 6c 7d 20 26 20 fc 20 5c 5c 0a 5c 74 65 78 74 7b 55 75 6d 6c 7d 20 26 20 dc 20 5c 5c 0a 5c 74 65 78 74 7b 75 77 61 6e 67 6c 65 7d 20 26 20 a7 0a 5c 65 6e 64 7b 6d 61 74 72 69 78 7d 
+\  b  e  g  i  n  {  m  a  t  r  i  x  }  \n \  t  e  x  t  {  u  a  c  u  t  e  }     &     ú     \  \  \n \  t  e  x  t  {  U  a  c  u  t  e  }     &     Ú     \  \  \n \  t  e  x  t  {  u  a  r  r  }     &     \  u  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  u  A  r  r  }     &     \  U  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  a  r  r  }     &     ↟     \  \  \n \  t  e  x  t  {  U  a  r  r  o  c  i  r  }     &     ⥉     \  \  \n \  t  e  x  t  {  u  b  r  c  y  }     &     ў     \  \  \n \  t  e  x  t  {  U  b  r  c  y  }     &     Ў     \  \  \n \  t  e  x  t  {  u  b  r  e  v  e  }     &     ŭ     \  \  \n \  t  e  x  t  {  U  b  r  e  v  e  }     &     Ŭ     \  \  \n \  t  e  x  t  {  u  c  i  r  c  }     &     û     \  \  \n \  t  e  x  t  {  U  c  i  r  c  }     &     Û     \  \  \n \  t  e  x  t  {  u  c  y  }     &     у     \  \  \n \  t  e  x  t  {  U  c  y  }     &     У     \  \  \n \  t  e  x  t  {  u  d  a  r  r  }     &     ⇅     \  \  \n \  t  e  x  t  {  u  d  b  l  a  c  }     &     ű     \  \  \n \  t  e  x  t  {  U  d  b  l  a  c  }     &     Ű     \  \  \n \  t  e  x  t  {  u  d  h  a  r  }     &     ⥮     \  \  \n \  t  e  x  t  {  u  f  i  s  h  t  }     &     ⥾     \  \  \n \  t  e  x  t  {  u  f  r  }     &     \  m  a  t  h  f  r  a  k  {  u  }     \  \  \n \  t  e  x  t  {  U  f  r  }     &     \  m  a  t  h  f  r  a  k  {  U  }     \  \  \n \  t  e  x  t  {  u  g  r  a  v  e  }     &     ù     \  \  \n \  t  e  x  t  {  U  g  r  a  v  e  }     &     Ù     \  \  \n \  t  e  x  t  {  u  H  a  r  }     &     ⥣     \  \  \n \  t  e  x  t  {  u  h  a  r  l  }     &     \  u  p  h  a  r  p  o  o  n  l  e  f  t     \  \  \n \  t  e  x  t  {  u  h  a  r  r  }     &     \  u  p  h  a  r  p  o  o  n  r  i  g  h  t     \  \  \n \  t  e  x  t  {  u  h  b  l  k  }     &     ▀     \  \  \n \  t  e  x  t  {  u  l  c  o  r  n  }     &     ⌜     \  \  \n \  t  e  x  t  {  u  l  c  o  r  n  e  r  }     &     ⌜     \  \  \n \  t  e  x  t  {  u  l  c  r  o  p  }     &     ⌏     \  \  \n \  t  e  x  t  {  u  l  t  r  i  }     &     ◸     \  \  \n \  t  e  x  t  {  u  m  a  c  r  }     &     ū     \  \  \n \  t  e  x  t  {  U  m  a  c  r  }     &     Ū     \  \  \n \  t  e  x  t  {  u  m  l  }     &     ¨     \  \  \n \  t  e  x  t  {  U  n  d  e  r  B  a  r  }     &     \  _     \  \  \n \  t  e  x  t  {  U  n  d  e  r  B  r  a  c  e  }     &     \  u  n  d  e  r  b  r  a  c  e     \  \  \n \  t  e  x  t  {  U  n  d  e  r  B  r  a  c  k  e  t  }     &     ⎵     \  \  \n \  t  e  x  t  {  U  n  d  e  r  P  a  r  e  n  t  h  e  s  i  s  }     &     ⏝     \  \  \n \  t  e  x  t  {  U  n  i  o  n  }     &     \  b  i  g  c  u  p     \  \  \n \  t  e  x  t  {  U  n  i  o  n  P  l  u  s  }     &     \  u  p  l  u  s     \  \  \n \  t  e  x  t  {  u  o  g  o  n  }     &     ų     \  \  \n \  t  e  x  t  {  U  o  g  o  n  }     &     Ų     \  \  \n \  t  e  x  t  {  u  o  p  f  }     &     \  m  a  t  h  b  b  {  u  }     \  \  \n \  t  e  x  t  {  U  o  p  f  }     &     \  m  a  t  h  b  b  {  U  }     \  \  \n \  t  e  x  t  {  u  p  a  r  r  o  w  }     &     \  u  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  a  r  r  o  w  }     &     \  U  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  A  r  r  o  w  }     &     \  u  p  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  A  r  r  o  w  B  a  r  }     &     ⤒     \  \  \n \  t  e  x  t  {  U  p  A  r  r  o  w  D  o  w  n  A  r  r  o  w  }     &     ⇅     \  \  \n \  t  e  x  t  {  u  p  d  o  w  n  a  r  r  o  w  }     &     \  u  p  d  o  w  n  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  d  o  w  n  a  r  r  o  w  }     &     \  U  p  d  o  w  n  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  D  o  w  n  A  r  r  o  w  }     &     \  u  p  d  o  w  n  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  E  q  u  i  l  i  b  r  i  u  m  }     &     ⥮     \  \  \n \  t  e  x  t  {  u  p  h  a  r  p  o  o  n  l  e  f  t  }     &     \  u  p  h  a  r  p  o  o  n  l  e  f  t     \  \  \n \  t  e  x  t  {  u  p  h  a  r  p  o  o  n  r  i  g  h  t  }     &     \  u  p  h  a  r  p  o  o  n  r  i  g  h  t     \  \  \n \  t  e  x  t  {  u  p  l  u  s  }     &     \  u  p  l  u  s     \  \  \n \  t  e  x  t  {  U  p  p  e  r  L  e  f  t  A  r  r  o  w  }     &     \  n  w  a  r  r  o  w     \  \  \n \  t  e  x  t  {  U  p  p  e  r  R  i  g  h  t  A  r  r  o  w  }     &     \  n  e  a  r  r  o  w     \  \  \n \  t  e  x  t  {  u  p  s  i  }     &     \  u  p  s  i  l  o  n     \  \  \n \  t  e  x  t  {  U  p  s  i  }     &     \  m  a  t  h  r  m  {  \  U  p  s  i  l  o  n  }     \  \  \n \  t  e  x  t  {  u  p  s  i  l  o  n  }     &     \  u  p  s  i  l  o  n     \  \  \n \  t  e  x  t  {  U  p  s  i  l  o  n  }     &     \  U  p  s  i  l  o  n     \  \  \n \  t  e  x  t  {  U  p  T  e  e  }     &     \  b  o  t     \  \  \n \  t  e  x  t  {  U  p  T  e  e  A  r  r  o  w  }     &     ↥     \  \  \n \  t  e  x  t  {  u  p  u  p  a  r  r  o  w  s  }     &     \  u  p  u  p  a  r  r  o  w  s     \  \  \n \  t  e  x  t  {  u  r  c  o  r  n  }     &     ⌝     \  \  \n \  t  e  x  t  {  u  r  c  o  r  n  e  r  }     &     ⌝     \  \  \n \  t  e  x  t  {  u  r  c  r  o  p  }     &     ⌎     \  \  \n \  t  e  x  t  {  u  r  i  n  g  }     &     ů     \  \  \n \  t  e  x  t  {  U  r  i  n  g  }     &     Ů     \  \  \n \  t  e  x  t  {  u  r  t  r  i  }     &     ◹     \  \  \n \  t  e  x  t  {  u  s  c  r  }     &     \  m  a  t  h  c  a  l  {  u  }     \  \  \n \  t  e  x  t  {  U  s  c  r  }     &     \  m  a  t  h  c  a  l  {  U  }     \  \  \n \  t  e  x  t  {  u  t  d  o  t  }     &     ⋰     \  \  \n \  t  e  x  t  {  u  t  i  l  d  e  }     &     ũ     \  \  \n \  t  e  x  t  {  U  t  i  l  d  e  }     &     Ũ     \  \  \n \  t  e  x  t  {  u  t  r  i  }     &     \  v  a  r  t  r  i  a  n  g  l  e     \  \  \n \  t  e  x  t  {  u  t  r  i  f  }     &     ▴     \  \  \n \  t  e  x  t  {  u  u  a  r  r  }     &     \  u  p  u  p  a  r  r  o  w  s     \  \  \n \  t  e  x  t  {  u  u  m  l  }     &     ü     \  \  \n \  t  e  x  t  {  U  u  m  l  }     &     Ü     \  \  \n \  t  e  x  t  {  u  w  a  n  g  l  e  }     &     ⦧  \n \  e  n  d  {  m  a  t  r  i  x  }  
