@@ -271,6 +271,7 @@ fn test_totex(){
     println!("===============================");
     println!("Time elapsed: {}ms", now.elapsed().as_millis());
     println!("{}/{} files parsed successfully", success, natives.len());
+    println!("rate: {}%", success as f64 / natives.len() as f64 * 100.0);
 }
 
 fn main() -> io::Result<()> {

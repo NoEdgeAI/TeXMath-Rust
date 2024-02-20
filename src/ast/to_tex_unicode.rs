@@ -1,11 +1,11 @@
 use std::{collections::HashMap, hash::BuildHasherDefault};
 use lazy_static::lazy_static;
 use ahash::AHasher;
-use super::{node, shared::{escape_latex, parse_as_unicode_char}};
+use super::{node, shared::{escape_latex, parse_as_unicode_char}, to_tex_unicode};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 enum CharType {
-    Unicode(String), // \d{1~5} -> \12345
+    Unicode(u32), // \d{1~5} -> \12345
     Escape(char), // \n \t \r 等
     Normal(char), // 普通字符, a b c 1 2 3 等
 }
@@ -27,6 +27,10 @@ fn spilt_str(s: &str) -> Vec<CharType>{
     while i < s.len() {
         let c = s.chars().nth(i).unwrap();
         if c == '\\' {
+            // 以\开头的情况有:
+            // 1. \n \t \r等转义字符 -> Escape
+            // 2. \d{1~5} unicode码点 -> Unicode
+            // 3. \" \\ 等引号内转义字符
             let next = s.chars().nth(i + 1).unwrap();
             if next.is_ascii_digit() {
                 let mut j = i + 1;
@@ -34,10 +38,17 @@ fn spilt_str(s: &str) -> Vec<CharType>{
                     j += 1;
                 }
                 // \d{1~5} -> \12345
-                res.push(CharType::Unicode(s[i ..j].to_string()));
+                let num = s.get(i + 1..j).unwrap().parse::<u32>().unwrap();
+                res.push(CharType::Unicode(num));
                 i = j;
             }else{
-                res.push(CharType::Escape(next));
+                if next == 'n' || next == 't' || next == 'r' || next == 'f' || next == 'v' {
+                    // \n \t \r \f \v
+                    res.push(CharType::Escape(next));
+                }else{
+                    // 引号内的转义字符
+                    res.push(CharType::Normal(next));
+                }
                 i += 2;
             }
         }else{
@@ -49,6 +60,47 @@ fn spilt_str(s: &str) -> Vec<CharType>{
 }
 
 #[test]
+fn test_escapse_text(){
+    let s = r#"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_""#;
+    let res = escapse_text(s);
+    println!("{:?}", res);
+}
+// 把文本中的\1234直接转为unicode
+pub fn escapse_text(s: &str) -> String{
+    let mut res = String::new();
+    let chars = spilt_str(s);
+    for c in chars {
+        match c {
+            // 对于 \xxxx的处理
+            CharType::Unicode(num) => {
+
+                if let Some(unicode) = std::char::from_u32(num) {
+                    res.push(unicode);
+                }else{
+                    panic!("invalid unicode: {:?}", num);
+                }
+            },
+            CharType::Escape(c) => {
+                res.push_str(
+                    &match c {
+                        'n' => "\\n".to_string(),
+                        't' => "\\t".to_string(),
+                        'r' => "\\r".to_string(),
+                        _ => c.to_string()
+                    });
+            },
+            CharType::Normal(c) => {
+                if let Some(escaped) = escape_latex(c) {
+                    res.push_str(&escaped);
+                }else{
+                    res.push(c);
+                }
+            }
+        }
+    }
+    res
+}
+#[test]
 fn test_get_math_tex_many(){
     let s = "a\\n\\t\\r\\8722\\177\\8747,test\\65024";
     let mut envs = HashMap::new();
@@ -57,7 +109,7 @@ fn test_get_math_tex_many(){
     let res = get_math_tex_many(s, &envs);
     dbg!(&res);
     println!("{:?}", res.as_bytes());
-    assert_eq!(res, "a\\n\\t\\r-\\pm\\int,test\u{fe00}");
+    assert_eq!(res, "a\\n\\t\\r-\\pm\\int,test");
 
     let s = "C\\160\\8203";
     let want = "C~\\hspace{0pt}";
@@ -67,6 +119,12 @@ fn test_get_math_tex_many(){
 
     let s = "\\8202";
     let want = "\\,";
+    let res = get_math_tex_many(s, &envs);
+    dbg!(&res);
+    assert_eq!(res, want);
+
+    let s = "\\8203";
+    let want = "\\hspace{0pt}";
     let res = get_math_tex_many(s, &envs);
     dbg!(&res);
     assert_eq!(res, want);
@@ -80,36 +138,42 @@ pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
     let mut res = String::new();
     let mut space_flag = false; // 上一个符号是\控制符的情况下, 下一个符号加空格
     let chars = spilt_str(s);
+
     for c in chars {
         match c {
+            // 对于 \xxxx的处理
             CharType::Unicode(num) => {
-                if num == "\\65024"{
+                if num == 65024 {
                     // -- we ignore 65024 VARIATION SELECTOR 1 to avoid putting it
                     //     -- literally in the output ; it is used in mathml output.
                     //     charToLaTeXString _ '\65024' = Just []
                     continue;
+                }else if num >= 8289 && num <= 8292 {
+                    // writeExp (ESymbol Ord (T.unpack -> [c]))  -- do not render "invisible operators"
+                    //   | c `elem` ['\x2061'..'\x2064'] = return () -- see 3.2.5.5 of mathml spec
+                    continue;
                 }
-                if let Some(cmd) = lookup_tex_cmd_table(num.as_str(), envs) {
-                    res.push_str(cmd.as_str());
-                    if cmd.starts_with("\\") && cmd.chars().last().unwrap().is_alphabetic() {
-                        // \[a-zA-Z], 结尾是字母, 可能需要加空格
-                        space_flag = true;
-                    }
-                }else {
-                    if let Some(unicode) = parse_as_unicode_char(num.as_str()) {
-                        if let Some(cmd) = look_rev_text_unicode_table(&unicode.to_string()) {
-                            res.push_str(cmd.as_str());
-                            // 这些命令都是\mathbb{A}这种形式, 不需要加空格
-                        }else{
-                            if space_flag && res.chars().last().unwrap().is_alphanumeric() {
-                                res.push_str(" ");
-                                space_flag = false;
-                            }
-                            res.push_str(escape_latex(unicode).as_str());
+
+
+
+
+                if let Some(unicode) = std::char::from_u32(num) {
+                    if let Some(tex_cmd) = lookup_tex_cmd_table(&unicode, envs) {
+                        res.push_str(&tex_cmd.val);
+
+                        // [Accent, Rad, TOver, TUnder] -> Categories which require braces
+                        if tex_cmd.category == "Accent" || tex_cmd.category == "Rad" || tex_cmd.category == "TOver" || tex_cmd.category == "TUnder" {
+                            res.push_str("{}");
                         }
-                    }else{
-                        panic!("unknown unicode: {:?}", num);
+                    }else if let Some(tex_cmd) = look_rev_text_unicode_table(&unicode) {
+                        res.push_str(&tex_cmd);
+                    }else if let Some(tex_cmd) = escape_latex(unicode) {
+                        res.push_str(&tex_cmd);
+                    }else {
+                        res.push(unicode);
                     }
+                }else{
+                    panic!("invalid unicode: {:?}", num);
                 }
             },
             CharType::Escape(c) => {
@@ -122,11 +186,11 @@ pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
                 });
             },
             CharType::Normal(c) => {
-                if space_flag && c.is_alphanumeric() && res.chars().last().unwrap().is_alphanumeric() {
-                    res.push_str(" ");
-                    space_flag = false;
+                if let Some(escaped) = escape_latex(c) {
+                    res.push_str(&escaped);
+                }else{
+                    res.push(c);
                 }
-                res.push_str(&escape_latex(c));
             }
         }
     }
@@ -135,23 +199,51 @@ pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
 
 #[test]
 fn test_lookup_tex_cmd_table(){
-    assert_eq!(lookup_tex_cmd_table("\\8722", &HashMap::new()), Some("-".to_string()));
-    assert_eq!(lookup_tex_cmd_table("\\177", &HashMap::new()), Some("\\pm".to_string()));
-    assert_eq!(lookup_tex_cmd_table("\\8747", &HashMap::new()), Some("\\int".to_string()));
-    assert_eq!(lookup_tex_cmd_table("\\8594", &HashMap::new()), Some("\\rightarrow".to_string()));
+    // assert_eq!(lookup_tex_cmd_table("\\8722", &HashMap::new()), Some(
+    //     tex_cmd_val{
+    //         category: "Bin".to_string(),
+    //         val: "-".to_string(),
+    //     }
+    // ));
+    // assert_eq!(lookup_tex_cmd_table("\\177", &HashMap::new()), Some(
+    //     tex_cmd_val{
+    //         category: "Ord".to_string(),
+    //         val: "\\pm".to_string(),
+    //     }
+    // ));
+    // assert_eq!(lookup_tex_cmd_table("\\8747", &HashMap::new()), Some(
+    //     tex_cmd_val{
+    //         category: "Op".to_string(),
+    //         val: "\\int".to_string(),
+    //     }
+    // ));
+    // assert_eq!(lookup_tex_cmd_table("\\8594", &HashMap::new()), Some(
+    //     tex_cmd_val{
+    //         category: "Rel".to_string(),
+    //         val: "\\rightarrow".to_string(),
+    //     }
+    // ));
 }
 
 // 查表, 转换unicode码点为tex命令
 // \120432 -> \mathtt{A}; env = base
-fn lookup_tex_cmd_table(symbol: &str, envs: &HashMap<String, bool>) -> Option<String>{
+fn lookup_tex_cmd_table(c: &char, envs: &HashMap<String, bool>) -> Option<tex_cmd_val>{
     // try base symbol
-    if let Some(base) = tex_table.get(("base_".to_string() + symbol).as_str()) {
-        return Some(base.to_string());
+    if let Some(base) = tex_table.get(("base_".to_string() + c.to_string().as_str()).as_str()) {
+        let res = tex_cmd_val{
+            category: base.category.to_string(),
+            val: base.val.to_string(),
+        };
+        return Some(res);
     }else{
         // try other envs
         for (env, _) in envs {
-            if let Some(base) = tex_table.get((env.to_string() + "_" + symbol).as_str()) {
-                return Some(base.to_string());
+            if let Some(base) = tex_table.get((env.to_string() + "_" + c.to_string().as_str()).as_str()) {
+                let res = tex_cmd_val{
+                    category: base.category.to_string(),
+                    val: base.val.to_string(),
+                };
+                return Some(res);
             }
         }
     }
@@ -175,11 +267,11 @@ fn look_text_unicode_table(t: &node::TextType, s: &String) -> Option<String>{
 #[test]
 fn test_look_rev_text_unicode_table(){
     let case = parse_as_unicode_char("\\8488").unwrap();
-    let res = look_rev_text_unicode_table(&case.to_string());
+    let res = look_rev_text_unicode_table(&case);
     assert_eq!(res, Some("\\mathfrak{Z}".to_string()));
 }
-fn look_rev_text_unicode_table(unicode: &String) -> Option<String>{
-    rev_text_unicode_table.get(unicode.as_str()).map(|v| v.to_string())
+fn look_rev_text_unicode_table(unicode: &char) -> Option<String>{
+    rev_text_unicode_table.get(unicode.to_string().as_str()).map(|v| v.to_string())
 }
 fn text_type_to_str(t: &node::TextType) -> String{
     match t {
@@ -256,19 +348,48 @@ fn text_type_cmd(t: &node::TextType) -> String{
     }.to_string()
 }
 
+#[derive(PartialEq, Debug)]
+struct tex_cmd_key{
+    env: String,
+    c: char,
+}
+#[derive(PartialEq, Debug)]
+struct tex_cmd_val{
+    pub category: String,
+    pub val: String,
+}
+
 lazy_static! {
-    static ref tex_table: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
+    static ref tex_table: HashMap<&'static str, &'static tex_cmd_val, BuildHasherDefault<AHasher>> = {
         let path = r#"E:\Code\Rust\texmath\src\ast\tables\tex_cmd_table.csv"#;
         let mut key_vals = csv::Reader::from_path(path).expect("read records err for tex_cmd_table.csv");
 
-        let mut m :HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
+        let mut m :HashMap<&'static str, &'static tex_cmd_val, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
         for result in key_vals.records() {
-            // TODO: tex_cmd_table中有些字符顺序不对, 需要重新读取调整
             let record = result.expect("Could not read record");
-            let env = record.get(0).expect("Missing env");
-            let c = record.get(1).expect("Missing char");
-            let val = Box::leak(Box::new(record.get(2).expect("Missing val").to_string()));
-            let key = Box::leak(Box::new(format!("{}_{}", env, c)));
+            let unicode_str = record.get(1).expect("Missing unicode");
+            let mut unicode;
+            if unicode_str.len() != 1 {
+                // \开头的unicode码点, 转换为char
+                let c = parse_as_unicode_char(unicode_str).expect("parse unicode err");
+                unicode = c;
+            }else{
+                // 非\开头的unicode码点, 直接转换为char
+                unicode = unicode_str.chars().next().expect("parse unicode err");
+            }
+
+            // dbg!(unicode.clone());
+
+            // env_c -> tex命令
+            let key = Box::leak(Box::new(
+                format!("{}_{}", record.get(0).expect("Missing env"), unicode)
+            ));
+            let val = Box::leak(Box::new(tex_cmd_val{
+                category: record.get(2).expect("Missing category").to_string(),
+                val: record.get(3).expect("Missing val").to_string(),
+            }));
+
+            // TODO: tex_cmd_table中有些字符顺序是反的, 所以只添加第一个
             if m.contains_key(key.as_str()) {
                 continue;
             }
@@ -330,4 +451,46 @@ lazy_static! {
         }
         m
     };
+}
+#[test]
+fn test_is_delimiters(){
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
+    let s = "\u{27e8}";
+    let res = is_delimiters(&s, &envs);
+    assert_eq!(res, true);
+
+    let s = "|";
+    let res = is_delimiters(&s, &envs);
+    assert_eq!(res, true);
+}
+
+pub fn is_delimiters(s: &str, envs: &HashMap<String, bool>) -> bool{
+    if s.len() == 0 {
+        return false;
+    }
+    let mut c = s.chars().next().unwrap();
+    if s.len() > 1 && s.starts_with("\\") {
+        // 可能是unicode码点
+        if let Some(unicode) = parse_as_unicode_char(s) {
+            c = unicode;
+        }else{
+            // \arrowvert 这样的命令
+            return false;
+        }
+    }
+    // TODO: 对envs的每个环境都生成一个列表, 再判断s是否在列表中, 这里直接查Open, Close可行吗?
+    let base_cmds = vec!['.', '(', ')', '[', ']', '|', '\u{2016}', '{', '}'
+                         , '\u{2309}', '\u{2308}', '\u{2329}', '\u{232A}'
+                         , '\u{230B}', '\u{230A}', '\u{231C}', '\u{231D}'];
+    // 这里仅仅判断了最基本的情况
+    if base_cmds.contains(&c){
+        return true;
+    }else if let Some(cmd) = lookup_tex_cmd_table(&c, envs) {
+        if cmd.category == "Open" || cmd.category == "Close" {
+            return true;
+        }
+    }
+    return false;
 }

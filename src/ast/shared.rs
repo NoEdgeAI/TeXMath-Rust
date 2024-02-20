@@ -139,10 +139,34 @@ pub fn parse_as_unicode_char(s: &str) -> Option<char> {
     char::from_u32(code_point)
 }
 
+#[test]
+fn test_escape_latex(){
+    let case = 'a';
+    let res = escape_latex(case);
+    println!("case: {:?}, res: {:?}", case, res);
+    assert_eq!(res, None);
+
+    let case = '#';
+    let res = escape_latex(case);
+    println!("case: {:?}, res: {:?}", case, res);
+    assert_eq!(res, Some("\\#".to_string()));
+
+    let case = '$';
+    let res = escape_latex(case);
+    println!("case: {:?}, res: {:?}", case, res);
+    assert_eq!(res, Some("\\$".to_string()));
+
+    let case = '\\';
+    let res = escape_latex(case);
+    println!("case: {:?}, res: {:?}", case, res);
+    assert_eq!(res, Some("\\textbackslash".to_string()));
+
+}
+
 // 转义latex特殊字符:
 // # -> \#
 // $ -> \$
-pub fn escape_latex(c: char) -> String{
+pub fn escape_latex(c: char) -> Option<String>{
     // case c of
     // '~'   -> ControlSeq "\\textasciitilde"
     // '^'   -> Literal "\\textasciicircum"
@@ -161,22 +185,22 @@ pub fn escape_latex(c: char) -> String{
     // _ | T.any (== c) "#$%&_{} " -> Literal ("\\" <> T.singleton c)
     //     | otherwise -> Token c
     match c {
-        '~' => "\\textasciitilde".to_string(),
-        '^' => "\\textasciicircum".to_string(),
-        '\\' => "\\textbackslash".to_string(),
-        '\u{200B}' => "\\!".to_string(),
-        '\u{200A}' => "\\,".to_string(),
-        '\u{2006}' => "\\,".to_string(),
-        '\u{A0}' => "~".to_string(),
-        '\u{2005}' => "\\:".to_string(),
-        '\u{2004}' => "\\;".to_string(),
-        '\u{2001}' => "\\quad".to_string(),
-        '\u{2003}' => "\\quad".to_string(),
-        '\u{2032}' => "'".to_string(),
-        '\u{2033}' => "''".to_string(),
-        '\u{2034}' => "'''".to_string(),
-        '#' | '$' | '%' | '&' | '_' | '{' | '}' | ' ' => "\\".to_string() + &c.to_string(),
-        _ => c.to_string()
+        '~' => Some("\\textasciitilde".to_string()),
+        '^' => Some("\\textasciicircum".to_string()),
+        '\\' => Some("\\textbackslash".to_string()),
+        '\u{200B}' => Some("\\!".to_string()),
+        '\u{200A}' => Some("\\,".to_string()),
+        '\u{2006}' => Some("\\,".to_string()),
+        '\u{A0}' => Some("~".to_string()),
+        '\u{2005}' => Some("\\:".to_string()),
+        '\u{2004}' => Some("\\;".to_string()),
+        '\u{2001}' => Some("\\quad".to_string()),
+        '\u{2003}' => Some("\\quad".to_string()),
+        '\u{2032}' => Some("'".to_string()),
+        '\u{2033}' => Some("''".to_string()),
+        '\u{2034}' => Some("'''".to_string()),
+        '#' | '$' | '%' | '&' | '_' | '{' | '}' | ' ' => Some("\\".to_string() + &c.to_string()),
+        _ => None
     }
 }
 

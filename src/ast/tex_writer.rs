@@ -3,42 +3,26 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use serde_json::json;
-use crate::ast::shared::is_mathoperator;
+use crate::ast::to_tex_unicode::{escapse_text, get_math_tex_many};
 use crate::pretty_print_hex;
-use super::shared;
-use super::to_tex_unicode;
-use super::node::{Exp, Alignment, ArrayLines, TextType, TeXSymbolType, FractionType, InEDelimited, Rational};
+use super::{shared, to_tex_unicode};
+use super::shared::{is_mathoperator, parse_as_unicode_char};
+use super::node::{Alignment, ArrayLines, Exp, FractionType, InEDelimited, Rational, TeXSymbolType, TextType};
 
-/*
- * 加空格的情况:
- * 1. \alphax -> \alpha x: ESymbol的转义和字母之间加空格
- * 2. \fracxy -> \frac xy: \frac的转义和两个变量之间加空格
- */
-
-// // Tex的控制序列
-// enum TexSeqType{
-//     Control, // 控制序列, 如\frac, \sqrt: \fracxy -> \frac xy
-//     Literal, // 符号: \alpha, \beta, \gamma: \alphax -> \alpha x
-//     Start, // 开始: 表示初始状态
+// Tex
+// #[derive(Debug, PartfialEq)]
+// enum Tex{
+//     Control(String), // 控制序列: \frac, \alpha, \beta, \gamma
+//     Token(char),
+//     Literal(String),
+//     Space,
+//     Group(Vec<Tex>),
 // }
 
-struct TexWriterContext {
-    tex: String, // 输出的TeX: 由于需要递归, 所以需要一个全局变量, 用于存储输出的TeX, 不使用String的原因是为了避免频繁的内存分配
+pub struct TexWriterContext {
+    tex: String, // 输出的文本
     envs: HashMap<String, bool>,
-    last_control: bool, // 对于\frac, \alpha等没有{}的控制序列, 需要加空格才能接下一个字母, 用于表示上一个是不是控制符号且没有其他分隔符
-}
-
-#[test]
-fn test_tex_writer(){
-    let case = r#"
-    [ ESymbol Ord "\8834\8402", ESymbol Ord "\8835\8402" ]"#;
-    let mut envs = HashMap::new();
-    envs.insert("amsmath".to_string(), true);
-    envs.insert("amssymb".to_string(), true);
-    let exp = super::ast_reader::read_ast(case).unwrap();
-    // dbg!(&exp);
-    let tex = write_tex_with_env(exp, &envs);
-    println!("{:?}", tex);
+    last_control: bool, // 是否可转换
 }
 
 #[test]
@@ -126,6 +110,7 @@ fn test_text_writer_file(){
     }
 
     let exp = super::ast_reader::read_ast(&native).unwrap();
+    dbg!(exp.clone());
     let mut envs = HashMap::new();
     envs.insert("amsmath".to_string(), true);
     envs.insert("amssymb".to_string(), true);
@@ -171,8 +156,8 @@ fn test_text_writer_file(){
 pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result<String, String>{
     let twc = &mut TexWriterContext {
         tex: String::new(),
-        envs: envs.clone(),
         last_control: false,
+        envs: envs.clone(),
     };
     for exp in &exps {
         write_exp(twc, exp)?;
@@ -260,62 +245,41 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
     c.tex.push_str("\n");
 
     // array rows
-    match rows.len(){
-        0 => {},
-        1 => {
-        },
-        _ => {
-            for (i, row) in rows.iter().enumerate(){
-                for (j, ele) in row.iter().enumerate(){
-                    // write arrayline:
-                    match ele.len() {
-                        0 => {},
-                        1 => {
-                            write_exp(c, &ele[0])?;
-
-                            // TODO: 边界情况:
-                            // \grave -> \grave{}: 有些命令后面需要加{}, 因为有些命令后面不加{}会导致后面的字母被吃掉
-                            // match &ele[0]{
-                            //     Exp::ESymbol(TeXSymbolType::Accent, s) => {
-                            //         match s.as_str(){
-                            //             "\\underbrace" | "\\underline" | "\\underbar" | "\\underbracket" => {
-                            //                 if c.tex.chars().last().unwrap() != '}'{
-                            //                     c.tex.push_str("{}");
-                            //                 }
-                            //             }
-                            //             _ => {}
-                            //         }
-                            //     },
-                            //     _ => {}
-                            // }
-                        },
-                        _ => {
-                            for e in ele{
-                                write_exp(c, e)?;
-                            }
+    if rows.len() != 0{
+        for (i, row) in rows.iter().enumerate(){
+            for (j, ele) in row.iter().enumerate(){
+                // write arrayline:
+                match ele.len() {
+                    0 => {},
+                    1 => {
+                        write_exp(c, &ele[0])?;
+                    },
+                    _ => {
+                        for e in ele{
+                            write_exp(c, e)?;
                         }
                     }
-
-                    // 最后一个元素不需要输出&
-                    if j == row.len() - 1{
-                        continue;
-                    }
-                    // 元素之间需要加上 &
-                    c.tex.push_str(" & ");
                 }
 
-                if i == rows.len() - 1{
-                    c.tex.push_str("\n");
-                    continue; // 最后一行不需要输出\\, 只需要换行, 后面加上\end{name}
+                // 最后一个元素不需要输出&
+                if j == row.len() - 1{
+                    continue;
                 }
-                // 如果不是最后一行, 需要输出\\
-                if c.tex.chars().last().unwrap() != ' '{
-                    // TODO: 检查\转义空格
-                    c.tex.push_str(" ");
-                }
-                c.tex.push_str("\\\\");
-                c.tex.push_str("\n");
+                // 元素之间需要加上 &
+                c.tex.push_str(" & ");
             }
+
+            if i == rows.len() - 1{
+                c.tex.push_str("\n");
+                continue; // 最后一行不需要输出\\, 只需要换行, 后面加上\end{name}
+            }
+            // 如果不是最后一行, 需要输出\\
+            if c.tex.chars().last().unwrap() != ' '{
+                // TODO: 检查\转义空格
+                c.tex.push_str(" ");
+            }
+            c.tex.push_str("\\\\");
+            c.tex.push_str("\n");
         }
     }
 
@@ -426,7 +390,8 @@ fn delimited_fraction_noline(c: &mut TexWriterContext, left: &String, right: &St
 
 fn delimited_write_delim(c: &mut TexWriterContext, ft: FenceType, delim: &str){
     let tex_delim = get_tex_math_many(delim, &c.envs);
-    let valid = is_delimiters(delim, &c.envs); // 界定符号是否有效
+    let valid = to_tex_unicode::is_delimiters(delim, &c.envs); // 界定符号是否有效
+
     let null_lim = get_tex_math_many(".", &c.envs); // TODO: 空的界定符号
 
     let delim_cmd = match valid {
@@ -453,6 +418,10 @@ fn delimited_write_delim(c: &mut TexWriterContext, ft: FenceType, delim: &str){
                 c.tex.push_str(" ");
             }else{
                 c.tex.push_str(&tex_delim);
+                if tex_delim.starts_with("\\"){
+                    // 可能是控制序列, 考虑空格
+                    c.last_control = true;
+                }
             }
         },
         FenceType::DRight => {
@@ -464,6 +433,32 @@ fn delimited_write_delim(c: &mut TexWriterContext, ft: FenceType, delim: &str){
             }
         },
     }
+}
+
+#[test]
+fn test_delimited_write_general_exp(){
+    let mut c = TexWriterContext {
+        tex: String::new(),
+        last_control: false,
+        envs: HashMap::new(),
+    };
+    // (EDelimited
+    // "\10216"
+    // "\10217"
+    // [ Right (EIdentifier "H")
+    //     , Right (ESymbol Rel "\8739")
+    //     , Right (EIdentifier "H")
+    // ])
+
+    let open = "\\10216".to_string();
+    let close = "\\10217".to_string();
+    let exp_list = vec![
+        InEDelimited::Right(Exp::EIdentifier("H".to_string())),
+        InEDelimited::Right(Exp::ESymbol(TeXSymbolType::Rel, "\\8739".to_string())),
+        InEDelimited::Right(Exp::EIdentifier("H".to_string())),
+    ];
+    delimited_write_general_exp(&mut c, &open, &close, &exp_list).unwrap();
+    println!("res: {:?}", c.tex);
 }
 fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &String, exp_list: &Vec<InEDelimited>) -> Result<(), String>{
 //     writeExp (EDelimited open close es)
@@ -535,12 +530,27 @@ fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &
     }
 }
 
+#[test]
+fn test_write_script(){
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    let mut c = TexWriterContext {
+        tex: String::new(),
+        last_control: false,
+        envs,
+    };
+    // EUnder False (ESymbol Op "\8749") (EIdentifier "S")
+    let b = Exp::ESymbol(TeXSymbolType::Op, "\\8749".to_string());
+    let e1 = Exp::EIdentifier("S".to_string());
+    write_script(&mut c, &Position::Under, &false, &b, &e1).unwrap();
+    println!("res: {:?}", c.tex);
+}
 fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &Exp, e1: &Exp) -> Result<(), String>{
     // TODO: write script
 
     let dia_cmd = match e1{
         Exp::ESymbol(t, s) => {
-            if t == &TeXSymbolType::Accent || t == &TeXSymbolType:: TOver || t == &TeXSymbolType::TUnder {
+            if t == &TeXSymbolType::Accent || t == &TeXSymbolType::TOver || t == &TeXSymbolType::TUnder {
                 get_diacritical_cmd(p, s)
             }else{
                 None
@@ -550,6 +560,7 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
             None
         }
     };
+
 
     if let Some(cmd) = dia_cmd {
         c.tex.push_str(&cmd);
@@ -563,13 +574,40 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
                 if *convertible{
                     write_exp(c, b)?;
                 }else{
+                    write_exp(c, b)?;
                     c.tex.push_str("\\limits");
                 }
-                c.tex.push_str("_");
-                // TODO: check_substack
-                // check_substack(res, e1, envs);
-                write_grouped_exp(c, e1)?;
+                c.tex.push_str("_{");
+                check_substack(c, e1)?;
+                c.tex.push_str("}");
             }
+        }else if p==&Position::Over && e1 == &Exp::ESymbol(TeXSymbolType::Accent, "\\831".to_string()){
+            // double bar
+            // tell [ControlSeq "\\overline", Literal "{",
+            // ControlSeq "\\overline"]
+            // tellGroup (writeExp b)
+            // tell [Literal "}"]
+
+            c.tex.push_str("\\overline{\\overline");
+            write_grouped_exp(c, b)?;
+            c.tex.push_str("}");
+        }else{
+            // case pos of
+            // Over   -> tell [ControlSeq "\\overset"]
+            // Under  -> tell [ControlSeq "\\underset"]
+            // tellGroup (writeExp e1)
+            // tellGroup (writeExp b)
+            match p {
+                Position::Over => {
+                    c.tex.push_str("\\overset");
+                },
+                Position::Under => {
+                    c.tex.push_str("\\underset");
+                }
+            }
+
+            write_grouped_exp(c, e1)?;
+            write_grouped_exp(c, b)?;
         }
     }
     Ok(())
@@ -619,15 +657,52 @@ fn write_underover_accent(c: &mut TexWriterContext, exp: &Exp) -> Result<bool, S
     }
 }
 
-fn check_substack(c: &mut TexWriterContext, e:&Exp){
+// Replace an array with a substack if appropriate.
+// 添加substack, 如果合适的话
+// 否则输出原来的Exp
+fn check_substack(c: &mut TexWriterContext, e:&Exp) -> Result<(), String>{
+    // (EArray [AlignCenter] rows) 模式且 envs["amsmath"] = True
+    // Otherwise -> writeExp e
     match e{
         Exp::EArray(aligns, rows) => {
-            panic!("check_substack not implemented");
+            if aligns_is_all_center(aligns) && c.envs["amsmath"]{
+                c.tex.push_str("\\substack{");
+
+                for (i, row) in rows.iter().enumerate(){
+                    for (j, ele) in row.iter().enumerate(){
+                        for e in ele{
+                            match e {
+                                // substack不需要加{}
+                                Exp::EGrouped(exp_list) => {
+                                    for e in exp_list{
+                                        write_exp(c, e)?;
+                                    }
+                                },
+                                _ => {
+                                    write_exp(c, e)?;
+                                }
+                            }
+                        }
+                        if j == row.len() - 1{
+                            continue;
+                        }
+                        c.tex.push_str(" & ");
+                    }
+                    if i == rows.len() - 1{
+                        continue;
+                    }
+                    c.tex.push_str(" \\\\ ");
+                }
+
+                c.tex.push_str("}");
+                return Ok(());
+            }
         },
-        _ => {
-            write_exp(c, e);
-        }
+        _ => {}
     }
+
+    write_exp(c, e)?;
+    Ok(())
 }
 
 
@@ -648,7 +723,7 @@ fn is_all_right(exp_list: &Vec<InEDelimited>) -> bool{
 // 把字符串的每一个字符转换为unicode escape
 // 需要同时处理转义字符和utf8码点\d{4}
 fn get_tex_math_many(s: &str, envs: &HashMap<String, bool>) -> String{
-    to_tex_unicode::get_math_tex_many(s, envs)
+    get_math_tex_many(s, envs)
 }
 
 // check if all exp is standard height:
@@ -679,38 +754,30 @@ fn is_all_standard_height(exp: &Vec<InEDelimited>) -> bool{
     return true;
 }
 
-fn is_delimiters(s: &str, envs: &HashMap<String, bool>) -> bool{
-    let cmds = vec![ ".", "(", ")", "[", "]", "|", "\x2016", "{", "}"
-                     , "\u{2309}", "\u{2308}", "\u{2329}", "\u{232A}"
-                     , "\u{230B}", "\u{230A}", "\u{231C}", "\u{231D}"];
-    // TODO: 对envs的每个环境都生成一个列表, 再判断s是否在列表中
-    // 这里仅仅判断了最基本的情况
-    if cmds.contains(&s){
-        return true;
-    }
-    return false;
-}
+
 
 fn get_scaler_cmd(rational: &Rational) -> Option<String>{
-    // TODO: get scaler cmd
-    // panic!("get_scaler_cmd not implemented");
-    return None;
-}
-// 将\\ 转换为空格
-fn fix_space(s: &str) -> String{
-    if s == "\\ "{
-        return " ".to_string();
+    let need_width = rational.numerator as f64 / rational.denominator as f64;
+    // 6/5 -> \big
+    // 9/5 -> \Big
+    // 12/5 -> \bigg
+    // 15/5 -> \Bigg
+    if need_width <= 1.2 {
+        return Some("\\big".to_string());
+    }else if need_width <= 1.8 {
+        return Some("\\Big".to_string());
+    }else if need_width <= 2.4 {
+        return Some("\\bigg".to_string());
+    }else if need_width <= 3.0 {
+        return Some("\\Bigg".to_string());
     }
-    return s.to_string();
+    return None;
 }
 
 fn get_diacritical_cmd(pos: &Position, s: &str) -> Option<String>{
     let cmd = shared::get_diacriticals(s);
     match cmd {
         Some(cmd) => {
-            if shared::is_below(cmd.as_str()) {
-                return None
-            }
             let below = shared::is_below(cmd.as_str());
             match pos{
                 Position::Under => {
@@ -732,6 +799,7 @@ fn get_diacritical_cmd(pos: &Position, s: &str) -> Option<String>{
 
 fn get_style_latex_cmd(style: &TextType, envs: &HashMap<String, bool>) -> String{
     // TODO: 处理环境, 有些环境可能不支持某些style, 如mathbfit
+    // 现在仅仅将它转化为标准的LaTeX命令
     match style{
         &TextType::TextNormal => "\\mathrm".to_string(),
         &TextType::TextBold => "\\mathbf".to_string(),
@@ -739,14 +807,18 @@ fn get_style_latex_cmd(style: &TextType, envs: &HashMap<String, bool>) -> String
         &TextType::TextMonospace => "\\mathtt".to_string(),
         &TextType::TextBoldItalic => "\\mathbfit".to_string(),
         &TextType::TextSansSerif => "\\mathsf".to_string(),
-        &TextType::TextSansSerifBold => "\\mathbfsf".to_string(),
-        &TextType::TextSansSerifItalic => "\\mathbfsf".to_string(),
+        // &TextType::TextSansSerifBold => "\\mathbfsf".to_string(),
+        &TextType::TextSansSerifBold => "\\mathbf".to_string(),
+        // &TextType::TextSansSerifItalic => "\\mathbfsf".to_string(),
+        &TextType::TextSansSerifItalic => "\\mathsf".to_string(),
         &TextType::TextSansSerifBoldItalic => "\\mathbfsfit".to_string(),
         &TextType::TextScript => "\\mathcal".to_string(),
         &TextType::TextFraktur => "\\mathfrak".to_string(),
         &TextType::TextDoubleStruck => "\\mathbb".to_string(),
-        &TextType::TextBoldFraktur => "\\mathbffrak".to_string(),
-        &TextType::TextBoldScript => "\\mathbfscr".to_string(),
+        // &TextType::TextBoldFraktur => "\\mathbffrak".to_string(),
+        &TextType::TextBoldFraktur => "\\mathfrak".to_string(),
+        // &TextType::TextBoldScript => "\\mathbfscr".to_string(),
+        &TextType::TextBoldScript => "\\mathcal".to_string(),
     }
 }
 
@@ -770,9 +842,9 @@ fn get_text_cmd(t: &TextType) -> (String, u8){
 fn get_xarrow(e: &Exp) -> Option<String>{
     return match e {
         Exp::ESymbol(TeXSymbolType::Op, s) => {
-            return if s == "\u{2192}" {
+            return if s == "\\8594" {
                 Some("\\xrightarrow".to_string())
-            } else if s == "\u{2190}" {
+            } else if s == "\\8592" {
                 Some("\\xleftarrow".to_string())
             } else {
                 None
@@ -856,7 +928,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
     match exp{
         Exp::ENumber(n) => {
             c.last_control = false;
-            c.tex.push_str(n);
+            c.tex.push_str(get_math_tex_many(n, &c.envs).as_str());
         },
 
         Exp::EBoxed(exp) => {
@@ -907,17 +979,6 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::ESymbol(symbol_type, symbol) => {
-            // writeExp (ESymbol Ord (T.unpack -> [c]))  -- do not render "invisible operators"
-            //   | c `elem` ['\x2061'..'\x2064'] = return () -- see 3.2.5.5 of mathml spec
-
-            if symbol_type == &TeXSymbolType::Ord && symbol.len() == 1{
-                let c = symbol.chars().next().unwrap();
-                if c >= '\u{2061}' && c <= '\u{2064}'{
-                    return Ok(());
-                }
-            }
-
-
             let escaped = get_tex_math_many(&symbol, &c.envs);
             // 如果是Bin, Rel则需要添加一个空格
             if *symbol_type == TeXSymbolType::Bin || *symbol_type == TeXSymbolType::Rel{
@@ -1001,17 +1062,16 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             // 为了防止连续的标识符被合并, 需要在标识符之间添加空格, 如:
             // \alphax -> \alpha x
             let escaped = get_tex_math_many(&identifier, &c.envs);
-            if c.last_control &&
+            if escaped.len() == 0{
+                return Ok(());
+            }else if c.last_control &&
                 c.tex.len() > 0 && c.tex.chars().last().unwrap().is_alphabetic() &&
                 escaped.len() > 0 && escaped.chars().next().unwrap().is_alphabetic(){
                 c.tex.push_str(" ");
                 c.last_control = false;
             }
 
-            let escaped = get_tex_math_many(&identifier, &c.envs);
-            if escaped.len() == 0{
-                return Ok(());
-            }
+
             c.tex.push_str(&escaped);
 
             // escape 开头为\\, c.tex结尾为字母 -> 为控制符 \xxx
@@ -1026,6 +1086,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             if is_mathoperator(escaped.as_str()) {
                 c.tex.push_str("\\");
                 c.tex.push_str(&escaped);
+                c.last_control = true;
             }else{
                 c.tex.push_str("\\operatorname{");
                 // TODO: ask \operatorname* for more precise
@@ -1098,8 +1159,12 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 return Ok(());
             }
             let (cmd, repeats) = get_text_cmd(text_type);
+
             c.tex.push_str(&cmd);
-            c.tex.push_str(&get_tex_math_many(str, &c.envs));
+            let text = &escapse_text(str);
+            // 修复Text中的空格: \+空格 -> 空格
+            let text = text.replace("\\ ", " ");
+            c.tex.push_str(text.as_str());
             c.tex.push_str("}".repeat(repeats as usize).as_str());
         },
 
@@ -1215,6 +1280,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                             if *convertible{
                                 write_exp(c, b)?;
                             }else{
+                                write_exp(c, b)?;
                                 c.tex.push_str("\\limits");
                             }
                             c.tex.push_str("_");
@@ -1240,7 +1306,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             c.tex.push_str("\\sqrt[");
             write_exp(c, exp1)?;
             c.tex.push_str("]");
-            write_exp(c, exp2)?;
+            write_grouped_exp(c, exp2)?;
         },
 
         Exp::EScaled(size, e) => {
