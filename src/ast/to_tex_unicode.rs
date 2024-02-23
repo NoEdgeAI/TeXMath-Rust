@@ -231,10 +231,10 @@ fn test_lookup_tex_cmd_table(){
 
 // 查表, 转换unicode码点为tex命令
 // \120432 -> \mathtt{A}; env = base
-fn lookup_tex_cmd_table(c: &char, envs: &HashMap<String, bool>) -> Option<tex_cmd_val>{
+fn lookup_tex_cmd_table(c: &char, envs: &HashMap<String, bool>) -> Option<TexCmdVal>{
     // try base symbol
-    if let Some(base) = tex_table.get(("base_".to_string() + c.to_string().as_str()).as_str()) {
-        let res = tex_cmd_val{
+    if let Some(base) = TEX_TABLE.get(("base_".to_string() + c.to_string().as_str()).as_str()) {
+        let res = TexCmdVal{
             category: base.category.to_string(),
             val: base.val.to_string(),
         };
@@ -242,8 +242,8 @@ fn lookup_tex_cmd_table(c: &char, envs: &HashMap<String, bool>) -> Option<tex_cm
     }else{
         // try other envs
         for (env, _) in envs {
-            if let Some(base) = tex_table.get((env.to_string() + "_" + c.to_string().as_str()).as_str()) {
-                let res = tex_cmd_val{
+            if let Some(base) = TEX_TABLE.get((env.to_string() + "_" + c.to_string().as_str()).as_str()) {
+                let res = TexCmdVal{
                     category: base.category.to_string(),
                     val: base.val.to_string(),
                 };
@@ -265,7 +265,7 @@ fn test_look_text_unicode_table(){
 // "TextFraktur","Z" -> "\8488"
 fn look_text_unicode_table(t: &node::TextType, s: &String) -> Option<String>{
     let key = text_type_to_str(t) + "_" + s;
-    text_unicode_table.get(key.as_str()).map(|v| v.to_string())
+    TEXT_UNICODE_TABLE.get(key.as_str()).map(|v| v.to_string())
 }
 
 #[test]
@@ -275,7 +275,7 @@ fn test_look_rev_text_unicode_table(){
     assert_eq!(res, Some("\\mathfrak{Z}".to_string()));
 }
 fn look_rev_text_unicode_table(unicode: &char) -> Option<String>{
-    rev_text_unicode_table.get(unicode.to_string().as_str()).map(|v| v.to_string())
+    REV_TEXT_UNICODE_TABLE.get(unicode.to_string().as_str()).map(|v| v.to_string())
 }
 fn text_type_to_str(t: &node::TextType) -> String{
     match t {
@@ -353,22 +353,22 @@ fn text_type_cmd(t: &node::TextType) -> String{
 }
 
 #[derive(PartialEq, Debug)]
-struct tex_cmd_key{
+struct TexCmdKey{
     env: String,
     c: char,
 }
 #[derive(PartialEq, Debug)]
-struct tex_cmd_val{
+struct TexCmdVal{
     pub category: String,
     pub val: String,
 }
 
 lazy_static! {
-    static ref tex_table: HashMap<&'static str, &'static tex_cmd_val, BuildHasherDefault<AHasher>> = {
+    static ref TEX_TABLE: HashMap<&'static str, &'static TexCmdVal, BuildHasherDefault<AHasher>> = {
         let path = r#"E:\Code\Rust\texmath\src\ast\tables\tex_cmd_table.csv"#;
         let mut key_vals = csv::Reader::from_path(path).expect("read records err for tex_cmd_table.csv");
 
-        let mut m :HashMap<&'static str, &'static tex_cmd_val, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
+        let mut m :HashMap<&'static str, &'static TexCmdVal, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
         for result in key_vals.records() {
             let record = result.expect("Could not read record");
             let unicode_str = record.get(1).expect("Missing unicode");
@@ -388,7 +388,7 @@ lazy_static! {
             let key = Box::leak(Box::new(
                 format!("{}_{}", record.get(0).expect("Missing env"), unicode)
             ));
-            let val = Box::leak(Box::new(tex_cmd_val{
+            let val = Box::leak(Box::new(TexCmdVal{
                 category: record.get(2).expect("Missing category").to_string(),
                 val: record.get(3).expect("Missing val").to_string(),
             }));
@@ -403,7 +403,7 @@ lazy_static! {
     };
 
     // text type + text -> unicode
-    static ref text_unicode_table: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
+    static ref TEXT_UNICODE_TABLE: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
         let path = r#"E:\Code\Rust\texmath\src\ast\tables\text_unicode_table.csv"#;
         let mut reader = csv::Reader::from_path(path).expect("read records err for text_unicode_table.csv");
         let mut m :HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
@@ -423,7 +423,7 @@ lazy_static! {
 
     // unicode码点对应的命令表, 如果相同则以最后一个为准
     // 如: \u{xxxx} -> \mathbb{A}
-    static ref rev_text_unicode_table: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
+    static ref REV_TEXT_UNICODE_TABLE: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
         let path = r#"E:\Code\Rust\texmath\src\ast\tables\text_unicode_table.csv"#;
         let mut reader = csv::Reader::from_path(path).expect("read records err for text_unicode_table.csv");
         let mut m :HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
