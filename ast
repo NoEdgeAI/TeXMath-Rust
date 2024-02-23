@@ -1,20 +1,23 @@
 <<< native
-[ EArray
-    [ AlignCenter ]
-    [ [ [ EGrouped
-            [ EIdentifier "E"
-            , ESymbol Rel "="
-            , EGrouped
-                [ EIdentifier "m"
-                , ESymbol Ord "\8290"
-                , ESuper (EIdentifier "c") (ENumber "2")
-                ]
+[ ENumber "2"
+, ESymbol Ord "\8290"
+, EGrouped
+    [ EUnderover
+        False
+        (ESymbol Op "\8721")
+        (EGrouped [ EIdentifier "n" , ESymbol Rel "=" , ENumber "1" ])
+        (ENumber "100")
+    , EGrouped
+        [ EIdentifier "n"
+        , ESymbol Ord "\8290"
+        , EGrouped
+            [ ESymbol Open "("
+            , EGrouped [ EIdentifier "n" , ESymbol Bin "\8722" , ENumber "1" ]
+            , ESymbol Close ")"
             ]
         ]
-      ]
     ]
 ]
+
 >>> tex
-\begin{matrix}
-{E = {mc^{2}}}
-\end{matrix}
+2{\sum\limits_{n = 1}^{100}{n{({n - 1})}}}

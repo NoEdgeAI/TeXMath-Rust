@@ -6,9 +6,9 @@ use std::io::Write;
 
 mod ast;
 use std::time::Instant;
+use ast::judge::{judge_by_texmath, JudgeResult};
 
 use crate::ast::ast_reader;
-use crate::ast::tex_writer::judge_by_texmath;
 
 fn read_dir_files_to_vec(dir: &Path) -> io::Result<Vec<String>> {
     let mut file_contents = Vec::new();
@@ -143,8 +143,8 @@ fn pretty_print_hex(output: String) -> String{
     }
     return format!("{}\n{}", hex, cs);
 }
-fn test_totex(){
-    let dir = "./src/test";
+fn test_totex_and_judge(){
+    let dir = "./src/failed";
 
     let res = read_dir_files(Path::new(dir)); // 读取目录下所有文件
     match res {
@@ -164,6 +164,7 @@ fn test_totex(){
     let mut envs = HashMap::new();
     envs.insert("amsmath".to_string(), true);
     envs.insert("amssymb".to_string(), true);
+    envs.insert("mathbb".to_string(), true);
     for i in 0..natives.len() {
         match ast_reader::read_ast(&natives[i]) {
             Ok (exp) => {
@@ -180,15 +181,19 @@ fn test_totex(){
 
                         let right_tex = texs[i].trim().to_string();
                         let native = natives[i].trim().to_string();
-                        let (same, texmath_res) = judge_by_texmath(right_tex.clone(), tex.clone());
+                        let (jr, texmath_res) = judge_by_texmath(right_tex.clone(), tex.clone());
+                        // if jr != JudgeResult::Same{
+                        //     panic!("to_test error: {}/{}: {file}", i+1, natives.len(), file = filenames[i]);
+                        // }
+                        let same = jr == JudgeResult::Same || jr == JudgeResult::Equivalent;
                         if same || pretty_print_hex(right_tex.clone()) == pretty_print_hex(tex.clone()) {
                             // println!("to_test ok: {}/{}", i+1, natives.len());
                             let right_tex = texs[i].trim().to_string().replace("\r\n", "\n");
                             let tex = tex.trim().to_string().replace("\r\n", "\n");
                             if right_tex == tex {
-                                println!("same tex : {}/{}", i+1, natives.len());
+                                println!("Judge: {} : {}/{}", jr.to_str(),i+1, natives.len());
                             } else {
-                                println!("equal tex : {}/{}", i+1, natives.len());
+                                println!("Judge: {} : {}/{}", jr.to_str(), i+1, natives.len());
                             }
                             success += 1;
                             continue;
@@ -196,7 +201,7 @@ fn test_totex(){
                         // write to file
                         let f = fs::File::create("./output").unwrap();
                         let mut f = io::BufWriter::new(f);
-                        println!("same: {}", same);
+                        println!("same: {} = {:?}", same, jr.to_str());
 
                         f.write("filename:".as_bytes()).unwrap();
                         f.write(filenames[i].as_bytes()).unwrap();
@@ -274,7 +279,81 @@ fn test_totex(){
     println!("rate: {}%", success as f64 / natives.len() as f64 * 100.0);
 }
 
+fn bench_test_totex(){
+    let now = Instant::now();
+    let dir = "./src/test";
+
+    let res = read_dir_files(Path::new(dir)); // 读取目录下所有文件
+    match res {
+        Err(e) => {
+            println!("Error: {:?}", e);
+            return;
+        },
+        _ => {}
+    }
+
+    let (filenames, natives, texs) = res.unwrap();
+
+    println!("{} files found, start testing, using {} ms", natives.len(), now.elapsed().as_millis());
+
+    let mut success = 0;
+    let now = Instant::now();
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
+    envs.insert("mathbb".to_string(), true);
+    for i in 0..natives.len() {
+        match ast_reader::read_ast(&natives[i]) {
+            Ok (exp) => {
+                let totex_res = ast::tex_writer::write_tex_with_env(exp, &envs);
+                match totex_res{
+                    Ok(_) => {
+                        success += 1;
+                    },
+                    Err(e) => {
+                        println!("Exp to tex error: {}/{}", i, natives.len());
+                        println!("===============================");
+                        println!("filename=======================");
+                        println!("\n{}\n", filenames[i]);
+                        println!("===============================");
+                        println!("native=========================");
+                        println!("\n{}\n", natives[i]);
+                        println!("===============================");
+                        println!("tex============================");
+                        println!("\n{}\n", texs[i]);
+                        println!("===============================");
+                        println!("Parse error: {:?}", e);
+                        println!("===============================");
+                        return;
+                    }
+                }
+            },
+            Err(e) => {
+                // read_ast error
+                println!("read_ast error: {}/{}", i, natives.len());
+                println!("===============================");
+                println!("filename=======================");
+                println!("\n{}\n", filenames[i]);
+                println!("===============================");
+                println!("native=========================");
+                println!("\n{}\n", natives[i]);
+                println!("===============================");
+                println!("tex============================");
+                println!("\n{}\n", texs[i]);
+                println!("===============================");
+                println!("Parse error: {:?}", e);
+                println!("===============================");
+                return;
+            }
+        }
+    }
+
+    println!("===============================");
+    println!("Time elapsed: {}ms", now.elapsed().as_millis());
+    println!("{}/{} files parsed successfully", success, natives.len());
+    println!("rate: {}%", success as f64 / natives.len() as f64 * 100.0);
+}
 fn main() -> io::Result<()> {
-    test_totex();
+    test_totex_and_judge();
     Ok(())
 }

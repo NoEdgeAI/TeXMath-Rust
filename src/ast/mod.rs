@@ -5,3 +5,4 @@ mod to_tex_unicode;
 
 pub mod ast_reader;
 mod shared;
+pub(crate) mod judge;

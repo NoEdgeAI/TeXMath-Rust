@@ -12,9 +12,10 @@ enum CharType {
 
 #[test]
 fn test_spilt_str(){
-    let case = "a\\n\\t\\r\\f\\v\\8722\\177\\8747";
+    let case = "a\\n\\t\\r\\f\\v\\8722\\177\\8747[]\\\\";
     let res = spilt_str(case);
     println!("{:?}", res);
+    println!("{:?}", spilt_as_char(case));
 }
 // 把长串的text转换为码点:
 // 码点分3种:
@@ -59,6 +60,53 @@ fn spilt_str(s: &str) -> Vec<CharType>{
     res
 }
 
+fn spilt_as_char(s: &str) -> Vec<char>{
+    let mut res = Vec::new();
+    let mut i = 0;
+    while i < s.len() {
+        let c = s.chars().nth(i).unwrap();
+        if c == '\\' {
+            // 以\开头的情况有:
+            // 1. \n \t \r等转义字符 -> Escape
+            // 2. \d{1~5} unicode码点 -> Unicode
+            // 3. \" \\ 等引号内转义字符
+            // TODO: 可能会出现i+1越界的情况, 主要是\后面没有字符的情况, 实际上是非法的
+            let next = s.chars().nth(i + 1).unwrap();
+            if next.is_ascii_digit() {
+                let mut j = i + 1;
+                while j < s.len() && s.chars().nth(j).unwrap().is_ascii_digit() {
+                    j += 1;
+                }
+                // \d{1~5} -> \12345
+                let num = s.get(i + 1..j).unwrap().parse::<u32>().unwrap();
+                if let Some(unicode) = std::char::from_u32(num) {
+                    res.push(unicode);
+                }else{
+                    panic!("invalid unicode: {:?}", num);
+                }
+                i = j;
+            }else{
+                if next == 'n' || next == 't' || next == 'r' {
+                    // \n \t \r \f \v
+                    match next {
+                        'n' => res.push('\n'),
+                        't' => res.push('\t'),
+                        'r' => res.push('\r'),
+                        _ => panic!("unknown escape char: {:?}", next)
+                    }
+                }else{
+                    // 引号内的转义字符
+                    res.push(next);
+                }
+                i += 2;
+            }
+        }else{
+            res.push(c);
+            i += 1;
+        }
+    }
+    res
+}
 #[test]
 fn test_escapse_text(){
     let s = r#"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_""#;
@@ -68,34 +116,16 @@ fn test_escapse_text(){
 // 把文本中的\1234直接转为unicode
 pub fn escapse_text(s: &str) -> String{
     let mut res = String::new();
-    let chars = spilt_str(s);
+    let chars = spilt_as_char(s);
     for c in chars {
-        match c {
-            // 对于 \xxxx的处理
-            CharType::Unicode(num) => {
-
-                if let Some(unicode) = std::char::from_u32(num) {
-                    res.push(unicode);
-                }else{
-                    panic!("invalid unicode: {:?}", num);
-                }
-            },
-            CharType::Escape(c) => {
-                res.push_str(
-                    &match c {
-                        'n' => "\\n".to_string(),
-                        't' => "\\t".to_string(),
-                        'r' => "\\r".to_string(),
-                        _ => c.to_string()
-                    });
-            },
-            CharType::Normal(c) => {
-                if let Some(escaped) = escape_latex(c) {
-                    res.push_str(&escaped);
-                }else{
-                    res.push(c);
-                }
+        if let Some(escaped) = escape_latex(c) {
+            if escaped == "\\ "{
+                res.push_str(" ");
+            }else{
+                res.push_str(&escaped);
             }
+        }else{
+            res.push(c);
         }
     }
     res
@@ -108,93 +138,67 @@ fn test_get_math_tex_many(){
     envs.insert("amssymb".to_string(), true);
     let res = get_math_tex_many(s, &envs);
     dbg!(&res);
-    println!("{:?}", res.as_bytes());
-    assert_eq!(res, "a\\n\\t\\r-\\pm\\int,test");
+    println!("{:?}", res.0.as_bytes());
+    assert_eq!(res.0, "a\n\t\r-\\pm\\int,test");
 
     let s = "C\\160\\8203";
     let want = "C~\\hspace{0pt}";
     let res = get_math_tex_many(s, &envs);
     dbg!(&res);
-    assert_eq!(res, want);
+    assert_eq!(res.0, want);
 
     let s = "\\8202";
     let want = "\\,";
     let res = get_math_tex_many(s, &envs);
     dbg!(&res);
-    assert_eq!(res, want);
+    assert_eq!(res.0, want);
 
     let s = "\\8203";
     let want = "\\hspace{0pt}";
     let res = get_math_tex_many(s, &envs);
     dbg!(&res);
-    assert_eq!(res, want);
+    assert_eq!(res.0, want);
 }
 
 // 转换字符串为tex输出
 // 1. unicode+env -> tex命令
 // 2. 转义字符 -> 转义输出
 // 3. \d{1~5} -> \12345 unicode转换
-pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> String{
+// return: (tex, tokens数量), \alpha -> (\alpha, 1)
+pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> (String, usize){
     let mut res = String::new();
-    let mut space_flag = false; // 上一个符号是\控制符的情况下, 下一个符号加空格
-    let chars = spilt_str(s);
 
+    let chars = spilt_as_char(s);
+    let num = chars.len();
     for c in chars {
-        match c {
-            // 对于 \xxxx的处理
-            CharType::Unicode(num) => {
-                if num == 65024 {
-                    // -- we ignore 65024 VARIATION SELECTOR 1 to avoid putting it
-                    //     -- literally in the output ; it is used in mathml output.
-                    //     charToLaTeXString _ '\65024' = Just []
-                    continue;
-                }else if num >= 8289 && num <= 8292 {
-                    // writeExp (ESymbol Ord (T.unpack -> [c]))  -- do not render "invisible operators"
-                    //   | c `elem` ['\x2061'..'\x2064'] = return () -- see 3.2.5.5 of mathml spec
-                    continue;
-                }
-
-
-
-
-                if let Some(unicode) = std::char::from_u32(num) {
-                    if let Some(tex_cmd) = lookup_tex_cmd_table(&unicode, envs) {
-                        res.push_str(&tex_cmd.val);
-
-                        // [Accent, Rad, TOver, TUnder] -> Categories which require braces
-                        if tex_cmd.category == "Accent" || tex_cmd.category == "Rad" || tex_cmd.category == "TOver" || tex_cmd.category == "TUnder" {
-                            res.push_str("{}");
-                        }
-                    }else if let Some(tex_cmd) = look_rev_text_unicode_table(&unicode) {
-                        res.push_str(&tex_cmd);
-                    }else if let Some(tex_cmd) = escape_latex(unicode) {
-                        res.push_str(&tex_cmd);
-                    }else {
-                        res.push(unicode);
-                    }
-                }else{
-                    panic!("invalid unicode: {:?}", num);
-                }
-            },
-            CharType::Escape(c) => {
-                res.push_str(
-                    &match c {
-                    'n' => "\\n".to_string(),
-                    't' => "\\t".to_string(),
-                    'r' => "\\r".to_string(),
-                    _ => c.to_string()
-                });
-            },
-            CharType::Normal(c) => {
-                if let Some(escaped) = escape_latex(c) {
-                    res.push_str(&escaped);
-                }else{
-                    res.push(c);
-                }
-            }
+        if c == '\u{fe00}' {
+            // -- we ignore 65024 VARIATION SELECTOR 1 to avoid putting it
+            //     -- literally in the output ; it is used in mathml output.
+            //     charToLaTeXString _ '\65024' = Just []
+            continue;
+        }else if c== '\u{2061}' || c == '\u{2062}' || c == '\u{2063}' || c == '\u{2064}' {
+            // writeExp (ESymbol Ord (T.unpack -> [c]))  -- do not render "invisible operators"
+            //   | c `elem` ['\x2061'..'\x2064'] = return () -- see
+            continue;
         }
+
+        if let Some(tex_cmd) = lookup_tex_cmd_table(&c, envs) {
+            res.push_str(&tex_cmd.val);
+
+            // [Accent, Rad, TOver, TUnder] -> Categories which require braces
+            if tex_cmd.category == "Accent" || tex_cmd.category == "Rad" || tex_cmd.category == "TOver" || tex_cmd.category == "TUnder" {
+                res.push_str("{}");
+            }
+        }else if let Some(tex_cmd) = look_rev_text_unicode_table(&c) {
+            res.push_str(&tex_cmd);
+        }else if let Some(tex_cmd) = escape_latex(c) {
+            res.push_str(&tex_cmd);
+        }else {
+            res.push(c);
+        }
+
     }
-    res
+    (res, num)
 }
 
 #[test]
