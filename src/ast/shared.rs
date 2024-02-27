@@ -464,7 +464,7 @@ pub fn aligns_is_rlsequence(aligns: &Vec<Alignment>) -> bool{
     // isRLSequence [AlignRight, AlignLeft] = True
     // isRLSequence (AlignRight : AlignLeft : as) = isRLSequence as
     // isRLSequence _ = False
-    return if aligns.len() % 2 == 0 {
+    return if aligns.len() % 2 == 0 && aligns.len() >= 2 {
         for align_pair in aligns.chunks(2) {
             if align_pair[0] != Alignment::AlignRight || align_pair[1] != Alignment::AlignLeft {
                 return false;

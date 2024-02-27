@@ -1,64 +1,9 @@
 use std::{collections::HashMap, hash::BuildHasherDefault};
 use lazy_static::lazy_static;
 use ahash::AHasher;
-use super::{node, shared::{escape_latex, parse_as_unicode_char}, to_tex_unicode};
+use crate::config;
+use super::{node, shared::{escape_latex, parse_as_unicode_char}};
 
-#[derive(Debug, PartialEq, Clone)]
-enum CharType {
-    Unicode(u32), // \d{1~5} -> \12345
-    Escape(char), // \n \t \r 等
-    Normal(char), // 普通字符, a b c 1 2 3 等
-}
-
-#[test]
-fn test_spilt_str(){
-    let case = "a\\n\\t\\r\\f\\v\\8722\\177\\8747[]\\\\";
-    let res = spilt_str(case);
-    println!("{:?}", res);
-    println!("{:?}", spilt_as_char(case));
-}
-// 把长串的text转换为码点:
-// 码点分3种:
-// 1. unicode码点, \d{1~5} -> \12345
-// 2. 转义字符, \n \t \r ... -> 转义输出
-// 3. 普通字符, a b c -> 直接输出
-fn spilt_str(s: &str) -> Vec<CharType>{
-    let mut res = Vec::new();
-    let mut i = 0;
-    while i < s.len() {
-        let c = s.chars().nth(i).unwrap();
-        if c == '\\' {
-            // 以\开头的情况有:
-            // 1. \n \t \r等转义字符 -> Escape
-            // 2. \d{1~5} unicode码点 -> Unicode
-            // 3. \" \\ 等引号内转义字符
-            let next = s.chars().nth(i + 1).unwrap();
-            if next.is_ascii_digit() {
-                let mut j = i + 1;
-                while j < s.len() && s.chars().nth(j).unwrap().is_ascii_digit() {
-                    j += 1;
-                }
-                // \d{1~5} -> \12345
-                let num = s.get(i + 1..j).unwrap().parse::<u32>().unwrap();
-                res.push(CharType::Unicode(num));
-                i = j;
-            }else{
-                if next == 'n' || next == 't' || next == 'r' || next == 'f' || next == 'v' {
-                    // \n \t \r \f \v
-                    res.push(CharType::Escape(next));
-                }else{
-                    // 引号内的转义字符
-                    res.push(CharType::Normal(next));
-                }
-                i += 2;
-            }
-        }else{
-            res.push(CharType::Normal(c));
-            i += 1;
-        }
-    }
-    res
-}
 
 fn spilt_as_char(s: &str) -> Vec<char>{
     let mut res = Vec::new();
@@ -253,20 +198,6 @@ fn lookup_tex_cmd_table(c: &char, envs: &HashMap<String, bool>) -> Option<TexCmd
     }
     None
 }
-#[test]
-fn test_look_text_unicode_table(){
-    // "TextFraktur","Z","\8488"
-    let t = node::TextType::TextFraktur;
-    let s = "Z".to_string();
-    let res = look_text_unicode_table(&t, &s);
-    assert_eq!(res, Some("\\8488".to_string()));
-}
-
-// "TextFraktur","Z" -> "\8488"
-fn look_text_unicode_table(t: &node::TextType, s: &String) -> Option<String>{
-    let key = text_type_to_str(t) + "_" + s;
-    TEXT_UNICODE_TABLE.get(key.as_str()).map(|v| v.to_string())
-}
 
 #[test]
 fn test_look_rev_text_unicode_table(){
@@ -276,24 +207,6 @@ fn test_look_rev_text_unicode_table(){
 }
 fn look_rev_text_unicode_table(unicode: &char) -> Option<String>{
     REV_TEXT_UNICODE_TABLE.get(unicode.to_string().as_str()).map(|v| v.to_string())
-}
-fn text_type_to_str(t: &node::TextType) -> String{
-    match t {
-        node::TextType::TextNormal => "TextNormal",
-        node::TextType::TextBoldItalic => "TextBoldItalic",
-        node::TextType::TextBoldScript => "TextBoldScript",
-        node::TextType::TextBoldFraktur => "TextBoldFraktur",
-        node::TextType::TextBold => "TextBold",
-        node::TextType::TextItalic => "TextItalic",
-        node::TextType::TextMonospace => "TextMonospace",
-        node::TextType::TextSansSerifItalic => "TextSansSerifItalic",
-        node::TextType::TextSansSerifBoldItalic => "TextSansSerifBoldItalic",
-        node::TextType::TextSansSerifBold => "TextSansSerifBold",
-        node::TextType::TextSansSerif => "TextSansSerif",
-        node::TextType::TextDoubleStruck => "TextDoubleStruck",
-        node::TextType::TextScript => "TextScript",
-        node::TextType::TextFraktur => "TextFraktur",
-    }.to_string()
 }
 
 fn str_to_text_type(s: &str) -> node::TextType{
@@ -365,14 +278,15 @@ struct TexCmdVal{
 
 lazy_static! {
     static ref TEX_TABLE: HashMap<&'static str, &'static TexCmdVal, BuildHasherDefault<AHasher>> = {
-        let path = r#"E:\Code\Rust\texmath\src\ast\tables\tex_cmd_table.csv"#;
+        let prefix = config::get_config().table_dir.as_str();
+        let path = prefix.to_string() + "/tex_cmd_table.csv";
         let mut key_vals = csv::Reader::from_path(path).expect("read records err for tex_cmd_table.csv");
 
         let mut m :HashMap<&'static str, &'static TexCmdVal, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
         for result in key_vals.records() {
             let record = result.expect("Could not read record");
             let unicode_str = record.get(1).expect("Missing unicode");
-            let mut unicode;
+            let unicode;
             if unicode_str.len() != 1 {
                 // \开头的unicode码点, 转换为char
                 let c = parse_as_unicode_char(unicode_str).expect("parse unicode err");
@@ -404,7 +318,8 @@ lazy_static! {
 
     // text type + text -> unicode
     static ref TEXT_UNICODE_TABLE: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
-        let path = r#"E:\Code\Rust\texmath\src\ast\tables\text_unicode_table.csv"#;
+        let prefix = config::get_config().table_dir.as_str();
+        let path = prefix.to_string() + "/text_unicode_table.csv";
         let mut reader = csv::Reader::from_path(path).expect("read records err for text_unicode_table.csv");
         let mut m :HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
         for result in reader.records() {
@@ -424,7 +339,8 @@ lazy_static! {
     // unicode码点对应的命令表, 如果相同则以最后一个为准
     // 如: \u{xxxx} -> \mathbb{A}
     static ref REV_TEXT_UNICODE_TABLE: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
-        let path = r#"E:\Code\Rust\texmath\src\ast\tables\text_unicode_table.csv"#;
+        let prefix = config::get_config().table_dir.as_str();
+        let path = prefix.to_string() + "/text_unicode_table.csv";
         let mut reader = csv::Reader::from_path(path).expect("read records err for text_unicode_table.csv");
         let mut m :HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_hasher(BuildHasherDefault::<AHasher>::default());
         for result in reader.records() {

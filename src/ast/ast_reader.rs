@@ -60,7 +60,7 @@ fn parse_indelimited(input: &str) -> IResult<&str, Vec<node::InEDelimited>> {
             input = tmp;
             exp_list.push(right);
         }else{
-            return Err(nom::Err::Error(nom::error::Error::new(input, ErrorKind::Tag)));
+            return Err(Err::Error(nom::error::Error::new(input, ErrorKind::Tag)));
         }
 
         (input, _) = multispace0(input)?;
@@ -221,8 +221,9 @@ fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
     }
     
     
-    return Err(nom::Err::Error(nom::error::Error::new(input, ErrorKind::Tag)));
+    return Err(Err::Error(nom::error::Error::new(input, ErrorKind::Tag)));
 }
+
 
 fn parse_tex_symbol_type(input: &str) -> IResult<&str, node::TeXSymbolType>{
     // Ord, Op, Bin, Rel, Open, Close, Pun, Accent, Fence, TOver, TUnder, Alpha, BotAccent, Rad
@@ -778,7 +779,6 @@ fn parse_bool(input: &str) -> IResult<&str, bool> {
     ))(input)
 }
 
-
 // EOver false (Exp) (Exp)
 fn parse_over(input: &str) -> IResult<&str, node::Exp> {
     let mut output = input;
@@ -1198,17 +1198,20 @@ fn parse_array(input: &str) -> IResult<&str, node::Exp> {
 
     (input, _) = tag("[")(input)?;
     let mut aligns = Vec::new();
-    loop {
-        (input, _) = multispace0(input)?;
-        let (input_tmp, alignment) = parse_alignment(input)?;
-        aligns.push(alignment);
-        input = input_tmp;
-        (input, _) = multispace0(input)?;
-        if input.starts_with(']'){
-            break;
+    if !input.starts_with(']'){
+        loop {
+            (input, _) = multispace0(input)?;
+            let (input_tmp, alignment) = parse_alignment(input)?;
+            aligns.push(alignment);
+            input = input_tmp;
+            (input, _) = multispace0(input)?;
+            if input.starts_with(']'){
+                break;
+            }
+            (input, _) = char(',')(input)?;
         }
-        (input, _) = char(',')(input)?;
     }
+
     (input, _) = multispace0(input)?;
     (input, _) = tag("]")(input)?;
     (input, _) = multispace0(input)?;

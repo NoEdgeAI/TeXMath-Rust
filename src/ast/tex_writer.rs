@@ -6,7 +6,7 @@ use crate::ast::to_tex_unicode::{escapse_text, get_math_tex_many};
 use crate::pretty_print_hex;
 use super::{judge, shared, to_tex_unicode};
 use super::shared::{FenceType, is_mathoperator, Position};
-use super::node::{Alignment, ArrayLines, Exp, FractionType, InEDelimited, TeXSymbolType};
+use super::node::{Alignment, ArrayLines, Exp, FractionType, InEDelimited, TeXSymbolType, TextType};
 
 // Tex
 // #[derive(Debug, PartfialEq)]
@@ -25,20 +25,20 @@ pub struct TexWriterContext {
     convertible: bool, // 是否可转换
 }
 
-impl TexWriterContext {
-    pub fn default() -> Self {
-        let mut envs = HashMap::new();
-        envs.insert("amsmath".to_string(), true);
-        envs.insert("amssymb".to_string(), true);
-        envs.insert("mathbb".to_string(), true);
-        TexWriterContext {
-            tex: String::new(),
-            envs,
-            need_space: false,
-            convertible: false,
-        }
+pub fn default_context() -> TexWriterContext {
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
+    envs.insert("mathbb".to_string(), true);
+    TexWriterContext {
+        tex: String::new(),
+        envs,
+        need_space: false,
+        convertible: false,
     }
+}
 
+impl TexWriterContext {
     // 硬性添加空格, 会检查是否需要添加空格
     fn push_space(&mut self){
         // -- No space before ^, _, or \limits, and no doubled up spaces
@@ -64,10 +64,17 @@ impl TexWriterContext {
     fn push_text(&mut self, s: &str) {
         if s.len() == 0 {
             return;
-        } else if s == "}"{
+        }
+
+        if s == "}"{
             // }的前面如果有空格, 且不是\\ }, 则删除空格
+            // 主要针对ESymbol Rel外面有{}的情况:
+            // { = } -> {=}
             if self.tex.ends_with(' ') && !self.tex.ends_with("\\ "){
+                // 修改最后一个字符: 空格 -> }
                 self.tex.pop();
+                self.tex.push('}');
+                return;
             }
         }else if self.need_space && s.chars().next().unwrap().is_ascii_alphanumeric(){
             // 上一个指示需要空格, 且当前是字母或数字, 则需要输出空格以分隔
@@ -168,15 +175,78 @@ pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Resul
     Ok(twc.tex.clone())
 }
 
+pub fn write_tex_default(exps: Vec<Exp>) -> Result<String, String>{
+    let mut twc = default_context();
+    for exp in &exps {
+        write_exp(&mut twc, exp)?;
+    }
+    Ok(twc.tex.clone())
+}
+#[test]
+fn test_write_tex_with_md(){
+    let envs = HashMap::new();
+
+    // hello f(x) = \sqrt{x} world
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+        Exp::EIdentifier("f".to_string()),
+        Exp::EDelimited("(".to_string(), ")".to_string(), vec![InEDelimited::Right(Exp::EIdentifier("x".to_string()))]),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESqrt(Box::new(Exp::EIdentifier("x".to_string()))),
+        Exp::EText(TextType::TextNormal, "world".to_string()),
+    ];
+
+    let res = write_tex_with_md(exps, &envs).unwrap();
+    println!("res: {:?}", res);
+}
+pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result<String, String>{
+    let mut twc = default_context();
+    if exps.len() == 1{
+        return match exps[0] {
+            Exp::EText(TextType::TextNormal, ref s) => {
+                twc.push_text(s);
+                Ok(twc.tex.clone())
+            },
+            _ => {
+                // \\( \\)包裹
+                twc.push_raw("\\(");
+                write_exp(&mut twc, &exps[0])?;
+                twc.push_raw("\\)");
+                Ok(twc.tex.clone())
+            }
+        }
+    }
+    let mut last_is_text = false;
+    for exp in &exps {
+        // EText直接输出
+        match exp {
+            Exp::EText(TextType::TextNormal, s) => {
+                if !last_is_text && twc.tex.len() != 0{
+                    twc.push_raw("\\)");
+                    twc.push_space();
+                }
+                twc.push_text(s);
+                last_is_text = true;
+                continue;
+            },
+            _ => {}
+        }
+        if last_is_text{
+            twc.push_space();
+            twc.push_raw("\\(");
+        }
+        write_exp(&mut twc, exp)?;
+        last_is_text = false;
+    }
+    if !last_is_text{
+        twc.push_raw("\\)");
+    }
+    Ok(twc.tex.clone())
+}
 #[test]
 fn test_write_grouped_exp(){
     // \sqrt{aaa}
-    let mut c = TexWriterContext {
-        tex: String::new(),
-        need_space: false,
-        envs: HashMap::new(),
-        convertible: false,
-    };
+    let mut c = default_context();
 
     c.tex.push_str("\\sqrt");
 
@@ -447,12 +517,7 @@ fn delimited_write_delim(c: &mut TexWriterContext, ft: FenceType, delim: &str){
 
 #[test]
 fn test_delimited_write_general_exp(){
-    let mut c = TexWriterContext {
-        tex: String::new(),
-        need_space: false,
-        envs: HashMap::new(),
-        convertible: false,
-    };
+    let mut c = default_context();
     // (EDelimited
     // "\10216"
     // "\10217"
@@ -545,12 +610,7 @@ fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &
 fn test_write_script(){
     let mut envs = HashMap::new();
     envs.insert("amsmath".to_string(), true);
-    let mut c = TexWriterContext {
-        tex: String::new(),
-        need_space: false,
-        envs,
-        convertible: false,
-    };
+    let mut c = default_context();
     // EUnder False (ESymbol Op "\8749") (EIdentifier "S")
     let b = Exp::ESymbol(TeXSymbolType::Op, "\\8749".to_string());
     let e1 = Exp::EIdentifier("S".to_string());
@@ -698,7 +758,38 @@ fn write_if_substack(c: &mut TexWriterContext, e:&Exp) -> Result<(), String>{
         }
     }
 
-    return write_exp(c, e);
+    return write_under_over_add_group(c, e);
+}
+
+fn write_under_over_add_group(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
+    // 如果exp是一个ENumber, EIdentifier的情况下, 长度大于1, 此时前面有_或^的情况下:
+    // 出现 100_100, 100^100 这种情况, 需要添加{}, 否则会被解析为100_1 00, 100^1 00
+    match exp{
+        Exp::ENumber(n) => {
+            if n.len() > 1{
+                c.push_text("{");
+                write_exp(c, exp)?;
+                c.push_text("}");
+            }else{
+                write_exp(c, exp)?;
+            }
+            Ok(())
+        },
+        Exp::EIdentifier(s) => {
+            if s.len() > 1{
+                c.push_text("{");
+                write_exp(c, exp)?;
+                c.push_text("}");
+            }else{
+                write_exp(c, exp)?;
+            }
+            Ok(())
+        },
+        _ => {
+            write_exp(c, exp)?;
+            Ok(())
+        }
+    }
 }
 
 fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
@@ -871,7 +962,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             if shared::is_fancy(exp1){
                 write_grouped_exp(c, exp1)?;
             }else{
-                write_exp(c, exp1)?;
+                write_under_over_add_group(c, exp1)?;
             }
 
             c.push_text("_");
@@ -882,7 +973,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             if shared::is_fancy(exp1){
                 write_grouped_exp(c, exp1)?;
             }else{
-                write_exp(c, exp1)?;
+                write_under_over_add_group(c, exp1)?;
             }
 
             c.push_text("^");
@@ -893,7 +984,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             if shared::is_fancy(exp1){
                 write_grouped_exp(c, exp1)?;
             }else{
-                write_exp(c, exp1)?;
+                write_under_over_add_group(c, exp1)?;
             }
 
             c.push_text("_");

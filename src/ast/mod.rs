@@ -6,3 +6,4 @@ mod to_tex_unicode;
 pub mod ast_reader;
 pub mod shared;
 pub mod judge;
+pub mod server;

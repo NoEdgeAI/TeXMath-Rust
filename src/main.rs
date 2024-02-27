@@ -5,7 +5,11 @@ use std::io;
 use std::io::Write;
 
 mod ast;
+mod config;
+
 use std::time::Instant;
+use nom::AsBytes;
+use tokio::task;
 use ast::judge::{judge_by_texmath, JudgeResult};
 
 use crate::ast::ast_reader;
@@ -144,7 +148,7 @@ fn pretty_print_hex(output: String) -> String{
     return format!("{}\n{}", hex, cs);
 }
 fn test_totex_and_judge(){
-    let dir = "./src/failed";
+    let dir = "./src/test";
 
     let res = read_dir_files(Path::new(dir)); // 读取目录下所有文件
     match res {
@@ -353,7 +357,206 @@ fn bench_test_totex(){
     println!("{}/{} files parsed successfully", success, natives.len());
     println!("rate: {}%", success as f64 / natives.len() as f64 * 100.0);
 }
-fn main() -> io::Result<()> {
-    test_totex_and_judge();
+
+#[derive(Debug, serde::Deserialize)]
+struct JsonL {
+    native: String,
+    tex: String,
+}
+fn bench_test_jsonl(filename: &str){
+    // test write
+    let writer = fs::File::create("test.as_bytes").unwrap();
+    let mut writer = io::BufWriter::new(writer);
+    writer.write_all("test".as_bytes()).unwrap();
+    println!("test write done");
+    // remove file
+    fs::remove_file("test.as_bytes").unwrap();
+
+    let now = Instant::now();
+
+    let content = fs::read_to_string(filename).unwrap();
+
+    // 按行分割
+    let lines: Vec<&str> = content.split("\n").collect();
+    let mut test_cases: Vec<JsonL> = Vec::new();
+    for line in lines {
+        if line.len() == 0 {
+            continue;
+        }
+
+        match serde_json::from_str::<JsonL>(line) {
+            Ok(jsonl) => {
+                test_cases.push(jsonl);
+            },
+            Err(e) => {
+                println!("Parse error: {:?}", e);
+                println!("line: {}", line);
+                return;
+            }
+        }
+    }
+
+    println!("{} files found, start testing, using {} ms", test_cases.len(), now.elapsed().as_millis());
+
+
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
+    envs.insert("mathbb".to_string(), true);
+    let now = Instant::now();
+    let mut success = 0;
+    let mut parse_ast_error = 0;
+    let mut last_parse_error_line = String::new();
+    let all = test_cases.len();
+    for (pos,case) in test_cases.iter().enumerate() {
+        // println!("{} / {}", pos, all);
+        if pos % 100000 == 0 {
+            println!("{} / {}", pos, all);
+        }
+        let ast = match ast_reader::read_ast(&case.native) {
+            Ok(ast) => ast,
+            Err(_) => {
+                parse_ast_error += 1;
+                last_parse_error_line = last_parse_error_line +
+                    "\n===============================" + "\n" +
+                    &case.native +
+                    "\n===============================" + "\n" +
+                    &case.tex;
+                continue;
+            }
+        };
+        let totex_res = ast::tex_writer::write_tex_with_env(ast, &envs);
+        match totex_res {
+            Ok(tex) => {
+                if tex.trim() == case.tex.trim() {
+                    success += 1;
+                }
+            },
+            Err(e) => {
+                println!("Exp to tex error: {:?}", e);
+                return;
+            }
+        }
+    }
+
+    println!("===============================");
+    println!("Time elapsed: {}ms", now.elapsed().as_millis());
+    println!("{}/{} files parsed completedly same", success, all);
+    println!("rate: {}%", success as f64 / all as f64 * 100.0);
+
+    if parse_ast_error > 0 {
+        println!("parse_ast_error: {}", parse_ast_error);
+        // write to file
+        let f = fs::File::create("./rust_errors.txt").unwrap();
+        let mut f = io::BufWriter::new(f);
+        f.write_all(last_parse_error_line.as_bytes()).unwrap();
+    }
+}
+
+
+fn merge_jsonl_as(src: &str, target: &str, max: &str){
+    let content = fs::read_to_string(src).unwrap();
+    let max_num = max.parse::<usize>().unwrap();
+    // 按行分割
+    let lines: Vec<&str> = content.split("\n").collect();
+    let mut test_cases: Vec<JsonL> = Vec::new();
+    for line in lines {
+        if line.len() == 0 {
+            continue;
+        }
+
+        match serde_json::from_str::<JsonL>(line) {
+            Ok(jsonl) => {
+                // 处理: 把native的首尾的[ ]去掉
+                let mut native_str = jsonl.native.trim();
+                if native_str.len() == 0 {
+                    continue;
+                }else if native_str.starts_with("[") && native_str.ends_with("]") {
+                    native_str = native_str[1..native_str.len()-1].trim();
+                }
+                test_cases.push(JsonL{
+                    native: native_str.to_string(),
+                    tex: jsonl.tex.to_string(),
+                });
+                if test_cases.len() >= max_num {
+                    break;
+                }
+            },
+            Err(e) => {
+                println!("Parse error: {:?}", e);
+                println!("line: {}", line);
+                return;
+            }
+        }
+    }
+
+    println!("{} files found", test_cases.len());
+
+    println!("{}", "writing to file to ".to_string() + target);
+    // 预处理: 把所有的native合并为一个文件
+    // native: [ ] [ ] -> [ , ]
+    let f = fs::File::create(target).unwrap();
+    let mut f = io::BufWriter::new(f);
+    let mut buf = String::new();
+    for (pos,case) in test_cases.iter().enumerate() {
+        buf.push_str(case.native.as_str());
+
+        if pos != test_cases.len() - 1 {
+            buf.push_str(",\n");
+        }
+    }
+    f.write_all('['.to_string().as_bytes()).unwrap();
+    f.write_all(buf.as_bytes()).unwrap();
+    f.write_all(']'.to_string().as_bytes()).unwrap();
+    println!("write to file done");
+}
+#[tokio::main]
+async fn main() -> io::Result<()> {
+    let args = std::env::args().collect::<Vec<String>>();
+    if args.len() != 1 {
+        return match args[1] {
+            ref s if s == "server" => {
+                ast::server::run_server(config::get_config().server_addr.clone(), config::get_config().server_port).await;
+                Ok(())
+            },
+            ref s if s == "cmd" => {
+                let sync_result = task::spawn_blocking(move || {
+                    let mut envs = HashMap::new();
+                    envs.insert("amsmath".to_string(), true);
+                    envs.insert("amssymb".to_string(), true);
+                    envs.insert("mathbb".to_string(), true);
+                    let filename = &args[2];
+                    // read file
+                    let content = fs::read_to_string(filename).unwrap();
+                    // parse ast
+                    let exps = ast_reader::read_ast(&content).unwrap();
+                    let tex = ast::tex_writer::write_tex_with_env(exps, &envs).unwrap();
+                    println!("{}", tex);
+                }).await;
+                sync_result.unwrap();
+                Ok(())
+            },
+            ref s if s == "merge_jsonl" => {
+                let _ = task::spawn_blocking(move || {
+                    merge_jsonl_as(&args[2], &args[3], &args[4]);
+                }).await;
+                Ok(())
+            },
+            ref s if s == "bench_jsonl" => {
+                let _ = task::spawn_blocking(move || {
+                    bench_test_jsonl(&args[2]);
+                }).await;
+                Ok(())
+            },
+            _ => {
+                Ok(())
+            }
+        }
+    } else {
+        let sync_result = task::spawn_blocking(move || {
+            test_totex_and_judge();
+        }).await;
+        sync_result.unwrap();
+    };
     Ok(())
 }
