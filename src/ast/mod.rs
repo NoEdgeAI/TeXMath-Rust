@@ -4,5 +4,6 @@ pub mod tex_writer;
 mod to_tex_unicode;
 
 pub mod ast_reader;
-mod shares;
-// mod tex;
+pub mod shared;
+pub mod judge;
+pub mod server;

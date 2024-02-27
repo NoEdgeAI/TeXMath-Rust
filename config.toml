@@ -1,0 +1,3 @@
+table_dir = "E:\\Code\\Rust\\texmath\\src\\ast\\tables"
+server_addr = "127.0.0.1"
+server_port = 28000

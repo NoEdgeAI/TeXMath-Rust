@@ -4,3 +4,7 @@
 /.vscode
 /src/tex
 /src/test
+/src/failed
+/src/special
+ast
+output
