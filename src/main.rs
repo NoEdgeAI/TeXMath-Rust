@@ -554,7 +554,8 @@ async fn main() -> io::Result<()> {
         }
     } else {
         let sync_result = task::spawn_blocking(move || {
-            test_totex_and_judge();
+            // test_totex_and_judge();
+            test_read_tex();
         }).await;
         sync_result.unwrap();
     };

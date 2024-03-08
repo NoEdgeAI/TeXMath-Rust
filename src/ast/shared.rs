@@ -3,7 +3,7 @@ use ahash::AHasher;
 use std::collections::HashMap;
 use std::hash::BuildHasherDefault;
 use crate::ast::node::{Alignment, Exp, InEDelimited, Rational, TeXSymbolType, TextType};
-use crate::ast::to_tex_unicode::get_math_tex_many;
+use crate::ast::tex_unicode::get_math_tex_many;
 
 #[test]
 fn test_get_diacriticals(){
@@ -50,7 +50,7 @@ pub fn is_below(s: &str) -> bool {
 
 lazy_static! {
     static ref DIACRITICALS_TABLE: HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = {
-        let mut m :HashMap::<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_capacity_and_hasher(34, BuildHasherDefault::<AHasher>::default());
+        let mut m :HashMap<&'static str, &'static str, BuildHasherDefault<AHasher>> = HashMap::with_capacity_and_hasher(34, BuildHasherDefault::<AHasher>::default());
         /*
         // unicode码点对应的命令表, 如果相同则以最后一个为准
         [ ("\x00B4", "\\acute")
@@ -202,45 +202,48 @@ pub fn escape_latex(c: char) -> Option<String>{
     }
 }
 
+lazy_static! {
+    static ref MATH_OPERATOR: HashMap<&'static str, bool, BuildHasherDefault<AHasher>> = {
+        let mut m = HashMap::<&'static str, bool, BuildHasherDefault<AHasher>>::with_capacity_and_hasher(34, BuildHasherDefault::<AHasher>::default());
+        m.insert("arccos", true);
+        m.insert("arcsin", true);
+        m.insert("arctan", true);
+        m.insert("arg", true);
+        m.insert("cos", true);
+        m.insert("cosh", true);
+        m.insert("cot", true);
+        m.insert("coth", true);
+        m.insert("csc", true);
+        m.insert("deg", true);
+        m.insert("det", true);
+        m.insert("dim", true);
+        m.insert("exp", true);
+        m.insert("gcd", true);
+        m.insert("hom", true);
+        m.insert("inf", true);
+        m.insert("ker", true);
+        m.insert("lg", true);
+        m.insert("lim", true);
+        m.insert("liminf", true);
+        m.insert("limsup", true);
+        m.insert("ln", true);
+        m.insert("log", true);
+        m.insert("max", true);
+        m.insert("min", true);
+        m.insert("Pr", true);
+        m.insert("sec", true);
+        m.insert("sin", true);
+        m.insert("sinh", true);
+        m.insert("sup", true);
+        m.insert("tan", true);
+        m.insert("tanh", true);
+
+        m
+    };
+}
+
 pub fn is_mathoperator(s: &str) -> bool {
-    // operators :: M.Map Exp T.Text
-    // operators = M.fromList
-    // [ (EMathOperator "arccos", "\\arccos")
-    // , (EMathOperator "arcsin", "\\arcsin")
-    // , (EMathOperator "arctan", "\\arctan")
-    // , (EMathOperator "arg", "\\arg")
-    // , (EMathOperator "cos", "\\cos")
-    // , (EMathOperator "cosh", "\\cosh")
-    // , (EMathOperator "cot", "\\cot")
-    // , (EMathOperator "coth", "\\coth")
-    // , (EMathOperator "csc", "\\csc")
-    // , (EMathOperator "deg", "\\deg")
-    // , (EMathOperator "det", "\\det")
-    // , (EMathOperator "dim", "\\dim")
-    // , (EMathOperator "exp", "\\exp")
-    // , (EMathOperator "gcd", "\\gcd")
-    // , (EMathOperator "hom", "\\hom")
-    // , (EMathOperator "inf", "\\inf")
-    // , (EMathOperator "ker", "\\ker")
-    // , (EMathOperator "lg", "\\lg")
-    // , (EMathOperator "lim", "\\lim")
-    // , (EMathOperator "liminf", "\\liminf")
-    // , (EMathOperator "limsup", "\\limsup")
-    // , (EMathOperator "ln", "\\ln")
-    // , (EMathOperator "log", "\\log")
-    // , (EMathOperator "max", "\\max")
-    // , (EMathOperator "min", "\\min")
-    // , (EMathOperator "Pr", "\\Pr")
-    // , (EMathOperator "sec", "\\sec")
-    // , (EMathOperator "sin", "\\sin")
-    // , (EMathOperator "sinh", "\\sinh")
-    // , (EMathOperator "sup", "\\sup")
-    // , (EMathOperator "tan", "\\tan")
-    // , (EMathOperator "tanh", "\\tanh") ]
-    match s {
-        "arccos" | "arcsin" | "arctan" | "arg" | "cos" | "cosh" | "cot" | "coth" | "csc" | "deg" | "det" | "dim" | "exp" | "gcd" | "hom" | "inf" | "ker" | "lg" | "lim" | "liminf" | "limsup" | "ln" | "log" | "max" | "min" | "Pr" | "sec" | "sin" | "sinh" | "sup" | "tan" | "tanh" => true,
-        _ => false
-    }
+    MATH_OPERATOR.contains_key(s)
 }
 
 #[test]
@@ -249,7 +252,8 @@ fn test_get_general_frac(){
     assert_eq!(s, "\\genfrac{[}{]}{0pt}{}");
 }
 
-// 获取通用的分数
+// generalFrac:
+// \genfrac{left-delim}{right-delim}{thickness}{style}{numerator}{denominator}
 pub fn get_general_frac(open: &str, close: &str) -> String{
     // \genfrac{left-delim}{right-delim}{thickness}{style}{numerator}{denominator}
     // \genfrac{左分隔符}{右分隔符}{厚度}{样式}{分子}{分母}
@@ -335,7 +339,7 @@ pub fn is_all_standard_height(exp: &Vec<InEDelimited>) -> bool{
     return true;
 }
 
-
+// EScale
 pub fn get_scaler_cmd(rational: &Rational) -> Option<String>{
     let need_width = rational.numerator as f64 / rational.denominator as f64;
     // 6/5 -> \big
@@ -427,6 +431,8 @@ pub fn get_text_cmd(t: &TextType) -> (String, u8){
     }
 }
 
+// xarrow = ESymbol Op "\\8594" -> "\\xrightarrow"
+// xarrow = ESymbol Op "\\8592" -> "\\xleftarrow"
 pub fn get_xarrow(e: &Exp) -> Option<String>{
     return match e {
         Exp::ESymbol(TeXSymbolType::Op, s) => {
@@ -442,6 +448,8 @@ pub fn get_xarrow(e: &Exp) -> Option<String>{
     }
 }
 
+// fancy: ESub, ESuper, ESubsup, EUnder, EOver, EUnderOver, ERoot, ESqrt, EPhantom
+// 指需要{}包裹的Exp
 pub fn is_fancy(e: &Exp) -> bool{
     match e{
         &Exp::ESub(..) => true,
@@ -464,7 +472,7 @@ pub fn aligns_is_rlsequence(aligns: &Vec<Alignment>) -> bool{
     // isRLSequence [AlignRight, AlignLeft] = True
     // isRLSequence (AlignRight : AlignLeft : as) = isRLSequence as
     // isRLSequence _ = False
-    return if aligns.len() % 2 == 0 && aligns.len() >= 2 {
+    return if aligns.len() >= 2 && aligns.len() % 2 == 0 {
         for align_pair in aligns.chunks(2) {
             if align_pair[0] != Alignment::AlignRight || align_pair[1] != Alignment::AlignLeft {
                 return false;
@@ -486,7 +494,7 @@ pub fn aligns_is_all_center(aligns: &Vec<Alignment>) -> bool{
     return true;
 }
 
-// Esymbol Op 或者 EMathOperator
+// Esymbol Op 或者 EMathOperator类型的Exp
 pub fn is_operator(e: &Exp) -> bool{
     match e{
         &Exp::ESymbol(TeXSymbolType::Op, ..) => true,
@@ -495,6 +503,7 @@ pub fn is_operator(e: &Exp) -> bool{
     }
 }
 
+#[derive(PartialEq, Debug)]
 pub enum FenceType{
     DLeft,
     DMiddle,

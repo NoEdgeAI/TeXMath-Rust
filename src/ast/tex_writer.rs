@@ -2,9 +2,9 @@ use core::panic;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
-use crate::ast::to_tex_unicode::{escapse_text, get_math_tex_many};
+use crate::ast::tex_unicode::{escapse_text, get_math_tex_many};
 use crate::pretty_print_hex;
-use super::{judge, shared, to_tex_unicode};
+use super::{judge, shared, tex_unicode};
 use super::shared::{FenceType, is_mathoperator, Position};
 use super::node::{Alignment, ArrayLines, Exp, FractionType, InEDelimited, TeXSymbolType, TextType};
 
@@ -474,7 +474,7 @@ fn delimited_fraction_noline(c: &mut TexWriterContext, left: &String, right: &St
 
 fn delimited_write_delim(c: &mut TexWriterContext, ft: FenceType, delim: &str){
     let tex_delim = shared::escape_text_as_tex(delim, &c.envs);
-    let valid = to_tex_unicode::is_delimiters(delim, &c.envs); // 界定符号是否有效
+    let valid = tex_unicode::is_delimiters(delim, &c.envs); // 界定符号是否有效
 
     let null_lim = shared::escape_text_as_tex(".", &c.envs); // TODO: 空的界定符号
 
