@@ -4,6 +4,7 @@ use axum::{
     extract::Json,
 };
 use std::net::SocketAddr;
+use std::ptr::eq;
 
 use crate::ast;
 
@@ -20,13 +21,15 @@ async fn convert_handler(Json(req): Json<ServerRequest>) -> Json<ServerResponse>
     envs.insert("amsmath".to_string(), true);
     envs.insert("amssymb".to_string(), true);
     envs.insert("mathbb".to_string(), true);
-    Json(native_to_tex(req.text.as_str(), &envs))
+    Json(native_to_tex(req.text.as_str(), &envs, req.equation))
 }
+
 #[derive(serde::Deserialize)]
 struct ServerRequest {
     from: String,
     to: String,
     text: String,
+    equation: bool,
 }
 
 #[derive(serde::Serialize)]
@@ -34,11 +37,14 @@ struct ServerResponse {
     output: String,
     error: String,
 }
-fn native_to_tex(native: &str, envs: &std::collections::HashMap<String, bool>) -> ServerResponse{
+fn native_to_tex(native: &str, envs: &std::collections::HashMap<String, bool>, equation: bool) -> ServerResponse{
     let ast = ast::ast_reader::read_ast(native);
     match ast {
         Ok(ast) => {
-            let tex = ast::tex_writer::write_tex_with_md(ast, envs);
+            let tex = match equation {
+                true => ast::tex_writer::write_tex_equation(ast),
+                false => ast::tex_writer::write_tex_with_md(ast, envs)
+            };
             match tex {
                 Ok(tex) => {
                     ServerResponse {

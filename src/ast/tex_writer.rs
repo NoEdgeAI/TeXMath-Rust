@@ -175,6 +175,63 @@ pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Resul
     Ok(twc.tex.clone())
 }
 
+#[test]
+fn test_write_text_default(){
+    let exps = vec![
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+    ];
+
+    let res = write_tex_default(exps).unwrap();
+    println!("res: {:?}", res);
+
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+    ];
+
+    let res = write_tex_default(exps).unwrap();
+    println!("res: {:?}", res);
+
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+        Exp::EText(TextType::TextNormal, "world".to_string()),
+    ];
+
+    let res = write_tex_default(exps).unwrap();
+    println!("res: {:?}", res);
+
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+        Exp::EText(TextType::TextNormal, "world".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+    ];
+
+    let res = write_tex_default(exps).unwrap();
+    println!("res: {:?}", res);
+}
+
+pub fn write_tex_equation(exps: Vec<Exp>) -> Result<String, String>{
+    let mut twc = default_context();
+    twc.push_raw("\\[");
+    for exp in &exps {
+        write_exp(&mut twc, exp)?;
+    }
+    twc.push_raw("\\]");
+    Ok(twc.tex.clone())
+}
 pub fn write_tex_default(exps: Vec<Exp>) -> Result<String, String>{
     let mut twc = default_context();
     for exp in &exps {
@@ -187,13 +244,47 @@ fn test_write_tex_with_md(){
     let envs = HashMap::new();
 
     // hello f(x) = \sqrt{x} world
+    // [EIdentifier "N",ESymbol Rel "=",ESymbol Ord "\8709"]
+    let exps = vec![
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+    ];
+
+    let res = write_tex_with_md(exps, &envs).unwrap();
+    println!("res: {:?}", res);
+
     let exps = vec![
         Exp::EText(TextType::TextNormal, "hello".to_string()),
-        Exp::EIdentifier("f".to_string()),
-        Exp::EDelimited("(".to_string(), ")".to_string(), vec![InEDelimited::Right(Exp::EIdentifier("x".to_string()))]),
+        Exp::EIdentifier("N".to_string()),
         Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
-        Exp::ESqrt(Box::new(Exp::EIdentifier("x".to_string()))),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+    ];
+
+    let res = write_tex_with_md(exps, &envs).unwrap();
+    println!("res: {:?}", res);
+
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
         Exp::EText(TextType::TextNormal, "world".to_string()),
+    ];
+
+    let res = write_tex_with_md(exps, &envs).unwrap();
+    println!("res: {:?}", res);
+
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "hello".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
+        Exp::EText(TextType::TextNormal, "world".to_string()),
+        Exp::EIdentifier("N".to_string()),
+        Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
+        Exp::ESymbol(TeXSymbolType::Ord, "\\8709".to_string()),
     ];
 
     let res = write_tex_with_md(exps, &envs).unwrap();
@@ -209,39 +300,40 @@ pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result
             },
             _ => {
                 // \\( \\)包裹
-                twc.push_raw("\\(");
+                twc.push_raw(" \\( ");
                 write_exp(&mut twc, &exps[0])?;
-                twc.push_raw("\\)");
+                twc.push_raw(" \\) ");
                 Ok(twc.tex.clone())
             }
         }
     }
-    let mut last_is_text = false;
+
+    let mut in_exp = false;
     for exp in &exps {
         // EText直接输出
         match exp {
             Exp::EText(TextType::TextNormal, s) => {
-                if !last_is_text && twc.tex.len() != 0{
-                    twc.push_raw("\\)");
-                    twc.push_space();
+                if in_exp {
+                    twc.push_raw("\\) ");
+                    in_exp = false;
                 }
                 twc.push_text(s);
-                last_is_text = true;
-                continue;
             },
-            _ => {}
+            _ => {
+                if !in_exp {
+                    twc.push_raw(" \\(");
+                    in_exp = true;
+                }
+                write_exp(&mut twc, exp)?;
+            }
         }
-        if last_is_text{
-            twc.push_space();
-            twc.push_raw("\\(");
-        }
-        write_exp(&mut twc, exp)?;
-        last_is_text = false;
     }
-    if !last_is_text{
-        twc.push_raw("\\)");
+
+    if in_exp {
+        twc.push_raw("\\) ");
     }
-    Ok(twc.tex.clone())
+
+    Ok(twc.tex.clone().trim().to_string())
 }
 #[test]
 fn test_write_grouped_exp(){
