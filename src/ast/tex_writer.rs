@@ -96,6 +96,24 @@ impl TexWriterContext {
 }
 
 #[test]
+fn test_tex_write_file2(){
+    let path = "input";
+    let f = fs::File::create("./output").unwrap();
+    let mut f = std::io::BufWriter::new(f);
+    let file_content = fs::read_to_string(path).unwrap();
+    for line in file_content.lines(){
+        if line.trim().len() == 0{
+            continue;
+        }
+        let exp = super::ast_reader::read_ast(&line.clone()).unwrap();
+        let tex = write_tex_default(exp).unwrap().trim().to_string();
+
+        println!("tex: {}", tex);
+        f.write(tex.as_bytes()).unwrap();
+    }
+
+}
+#[test]
 fn test_text_writer_file(){
     let path = "ast";
     let file_content = fs::read_to_string(path).unwrap();

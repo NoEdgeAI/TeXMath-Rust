@@ -4,10 +4,18 @@ use ahash::AHasher;
 use crate::config;
 use super::{node, shared::{escape_latex, parse_as_unicode_char}};
 
+#[test]
+fn test_spilt_as_char() {
+    let s = "地点 ";
+    let res = spilt_as_char(s);
+    println!("{:?}", res);
+}
+
 fn spilt_as_char(s: &str) -> Vec<char>{
+    // println!("{:?}", s);
     let mut res = Vec::new();
     let mut i = 0;
-    while i < s.len() {
+    while i < s.chars().count() {
         let c = s.chars().nth(i).unwrap();
         if c == '\\' {
             // 以\开头的情况有:
