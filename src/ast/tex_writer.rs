@@ -742,7 +742,6 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
         }
     };
 
-
     if let Some(cmd) = dia_cmd {
         c.push_text(&cmd);
         write_grouped_exp(c, b)?;
@@ -772,8 +771,36 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
                 c.push_text("^");
             }
         }
+        // 如果e1是一个EUnder/EOver/ESub/ESup/ESubSup, 则需要添加{}
+        // 避免歧义:
+        // b_e1_e11 -> b_{e1_{e11}}
+        let mut need_group = false;
+        match e1{
+            Exp::EUnder(_,_,_) => {
+                need_group = true;
+            },
+            Exp::EOver(_,_,_) => {
+                need_group = true;
+            },
+            Exp::ESub(_,_) => {
+                need_group = true;
+            },
+            Exp::ESuper(_,_) => {
+                need_group = true;
+            },
+            Exp::ESubsup(_,_,_) => {
+                need_group = true;
+            },
+            _ => {}
+        }
 
+        if need_group{
+            c.push_text("{");
+        }
         write_if_substack(c, e1)?;
+        if need_group{
+            c.push_text("}");
+        }
         c.convertible = false; // reset
         return Ok(());
     }else if p==&Position::Over && e1 == &Exp::ESymbol(TeXSymbolType::Accent, "\\831".to_string()){
@@ -1187,6 +1214,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::EOver(convertible, b, e1) => {
+            // 特殊处理 \xrightarrow, \xleftarrow 情况
             if let Some(exp) = shared::get_xarrow(b){
                 if c.envs["amsmath"]{
                     c.push_text(exp.as_str());
