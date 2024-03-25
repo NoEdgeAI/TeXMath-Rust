@@ -5,7 +5,7 @@ use std::io::Write;
 use crate::ast::tex_unicode::{escapse_text, get_math_tex_many};
 use crate::pretty_print_hex;
 use super::{judge, shared, tex_unicode};
-use super::shared::{FenceType, is_mathoperator, Position};
+use super::shared::{is_fancy, is_mathoperator, FenceType, Position};
 use super::node::{Alignment, ArrayLines, Exp, FractionType, InEDelimited, TeXSymbolType, TextType};
 
 // Tex
@@ -94,6 +94,21 @@ impl TexWriterContext {
         }
     }
 }
+#[test]
+fn test_tex_write_file_lines(){
+    let path = "input";
+    let f = fs::File::create("./output").unwrap();
+    let mut f = std::io::BufWriter::new(f);
+    let file_content = fs::read_to_string(path).unwrap();
+    
+    for line in file_content.lines(){
+        let exp = super::ast_reader::read_ast(line).unwrap();
+        let tex = write_tex_default(exp).unwrap().trim().to_string();
+        f.write(tex.as_bytes()).unwrap();
+        f.write("\n\n".as_bytes()).unwrap();
+        println!("tex: {}", tex);
+    }
+}
 
 #[test]
 fn test_tex_write_file2(){
@@ -101,18 +116,20 @@ fn test_tex_write_file2(){
     let f = fs::File::create("./output").unwrap();
     let mut f = std::io::BufWriter::new(f);
     let file_content = fs::read_to_string(path).unwrap();
-    for line in file_content.lines(){
-        if line.trim().len() == 0{
-            continue;
+    let exp = super::ast_reader::read_ast(file_content.as_str());
+        match exp {
+            Ok(exp) => {
+                let tex = write_tex_default(exp).unwrap().trim().to_string();
+                f.write(tex.as_bytes()).unwrap();
+                f.write("\n".as_bytes()).unwrap();
+                println!("tex: {}", tex);
+            },
+            Err(e) => {
+                println!("error: {:?}", e);
+            }
         }
-        let exp = super::ast_reader::read_ast(&line.clone()).unwrap();
-        let tex = write_tex_default(exp).unwrap().trim().to_string();
-
-        println!("tex: {}", tex);
-        f.write(tex.as_bytes()).unwrap();
-    }
-
 }
+
 #[test]
 fn test_text_writer_file(){
     let path = "ast";
@@ -775,34 +792,14 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
         // 避免歧义:
         // b_e1_e11 -> b_{e1_{e11}}
         // b_e1^e11 -> b_{e1}^{e11}
-        let mut need_group = false;
-        match e1{
-            Exp::EUnder(_,_,_) => {
-                need_group = true;
-            },
-            Exp::EOver(_,_,_) => {
-                need_group = true;
-            },
-            Exp::ESub(_,_) => {
-                need_group = true;
-            },
-            Exp::ESuper(_,_) => {
-                need_group = true;
-            },
-            Exp::ESubsup(_,_,_) => {
-                need_group = true;
-            },
-            _ => {}
-        }
+        
 
-        if need_group{
+        if is_fancy(e1){
             c.push_text("{");
-        }
-
-        write_if_substack(c, e1)?;
-
-        if need_group{
+            write_if_substack(c, e1)?;
             c.push_text("}");
+        }else{
+            write_if_substack(c, e1)?;
         }
         c.convertible = false; // reset
         return Ok(());
@@ -891,9 +888,9 @@ fn write_if_substack(c: &mut TexWriterContext, e:&Exp) -> Result<(), String>{
     // Otherwise -> writeExp e
     if let Exp::EArray(aligns, rows) = e {
         if c.envs["amsmath"] && aligns.len() == 1 && aligns[0] == Alignment::AlignCenter {
-            c.push_text("\\substack{");
+            c.push_text("{\\substack{");
             write_array_rows(c, rows)?;
-            c.push_text("}");
+            c.push_text("}}");
             return Ok(());
         }
     }
@@ -1282,9 +1279,23 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                     c.push_text("\\limits");
                 }
                 c.push_text("_");
-                write_if_substack(c, e1)?;
+
+                if is_fancy(e1){
+                    c.push_text("{");
+                    write_if_substack(c, e1)?;
+                    c.push_text("}");
+                }else{
+                    write_if_substack(c, e1)?;
+                }
                 c.push_text("^");
-                write_if_substack(c, e2)?;
+                
+                if is_fancy(e2){
+                    c.push_text("{");
+                    write_if_substack(c, e2)?;
+                    c.push_text("}");
+                }else{
+                    write_if_substack(c, e2)?;
+                }
 
                 c.convertible = false; // reset
 
