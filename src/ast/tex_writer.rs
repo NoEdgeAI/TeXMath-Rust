@@ -774,6 +774,7 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
         // 如果e1是一个EUnder/EOver/ESub/ESup/ESubSup, 则需要添加{}
         // 避免歧义:
         // b_e1_e11 -> b_{e1_{e11}}
+        // b_e1^e11 -> b_{e1}^{e11}
         let mut need_group = false;
         match e1{
             Exp::EUnder(_,_,_) => {
@@ -797,7 +798,9 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
         if need_group{
             c.push_text("{");
         }
+
         write_if_substack(c, e1)?;
+
         if need_group{
             c.push_text("}");
         }
