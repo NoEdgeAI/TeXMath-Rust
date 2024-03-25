@@ -5,6 +5,7 @@ use super::node;
 use nom::{
     branch::alt, bytes::complete::tag, character::complete::{char, digit1, multispace0, none_of}, combinator::map, error::ErrorKind, Err, IResult
 };
+use crate::ast::node::{Exp, TextType};
 
 // ast reader [Exp ...]
 pub fn read_ast(ast: &str) -> Result<Vec<node::Exp>, String> {
@@ -17,21 +18,6 @@ pub fn read_ast(ast: &str) -> Result<Vec<node::Exp>, String> {
             Result::Err(msg)
         }
     }
-}
-
-#[test]
-fn test_parse_exp_list() {
-    let test_case = "[ENumber \"1\", ENumber \"2\"]";
-    let (output, exp) = parse_exp_list(test_case).unwrap();
-    assert_eq!(
-        (output.trim(), exp),
-        ("",
-        vec![
-            node::Exp::ENumber("1".to_string()),
-            node::Exp::ENumber("2".to_string())
-        ]
-        )
-    );
 }
 
 fn parse_indelimited(input: &str) -> IResult<&str, Vec<node::InEDelimited>> {
@@ -132,17 +118,17 @@ fn parse_str_until_space(input: &str) -> IResult<&str, String> {
 #[test]
 fn test_parse_exp() {
     let test_case = "EIdentifier \"x\"";
-    assert_eq!(parse_exp(test_case), Ok(("", node::Exp::EIdentifier("x".to_string()))));
+    assert_eq!(parse_exp(test_case), Ok(("", Exp::EIdentifier("x".to_string()))));
 
     let test_case = "ENumber \"123\"";
-    assert_eq!(parse_exp(test_case), Ok(("", node::Exp::ENumber("123".to_string()))));
+    assert_eq!(parse_exp(test_case), Ok(("", Exp::ENumber("123".to_string()))));
 
     let test_case = "EMathOperator \"sin\"";
-    assert_eq!(parse_exp(test_case), Ok(("", node::Exp::EMathOperator("sin".to_string()))));
+    assert_eq!(parse_exp(test_case), Ok(("", Exp::EMathOperator("sin".to_string()))));
 
 }
 
-fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
+fn parse_exp(input: &str) -> IResult<&str, Exp> {
     let (mut input, _) = multispace0(input)?;
     if input.starts_with("ESymbol"){
         // symbol
@@ -238,7 +224,7 @@ fn parse_exp(input: &str) -> IResult<&str, node::Exp> {
     return Err(Err::Error(nom::error::Error::new(input, ErrorKind::Tag)));
 }
 
-type ExpParser = fn(&str) -> IResult<&str, node::Exp>;
+type ExpParser = fn(&str) -> IResult<&str, Exp>;
 
 lazy_static!{
     static ref EXP_PARSER: HashMap<&'static str, ExpParser, BuildHasherDefault<AHasher>> = {
@@ -399,7 +385,7 @@ fn parse_symbol(input: &str) -> IResult<&str, node::Exp> {
     (input, symbol_type) = parse_tex_symbol_type(input)?;
     (input, _) = multispace0(input)?;
     (input, text_type) = parse_quoted_string(input)?;
-    Ok((input, node::Exp::ESymbol(symbol_type, text_type)))
+    Ok((input, Exp::ESymbol(symbol_type, text_type)))
 }
 
 
@@ -409,11 +395,13 @@ fn test_parse_number() {
     assert_eq!(parse_number(test_case), Ok(("", node::Exp::ENumber("123".to_string()))));
 }
 // number: ENumber String
-fn parse_number(input: &str) -> IResult<&str, node::Exp> {
-    let (input, _) = tag("ENumber")(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, number) = parse_quoted_string(input)?;
-    Ok((input, node::Exp::ENumber(number)))
+fn parse_number(input: &str) -> IResult<&str, Exp> {
+    let mut input = input;
+    let mut number;
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("ENumber")(input)?;
+    (input, number) = parse_quoted_string(input)?;
+    Ok((input, Exp::ENumber(number)))
 }
 
 
@@ -424,11 +412,13 @@ fn test_parse_identifier() {
 }
 
 // identifier: EIdentifier String
-fn parse_identifier(input: &str) -> IResult<&str, node::Exp> {
-    let (input, _) = tag("EIdentifier")(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, identifier) = parse_quoted_string(input)?;
-    Ok((input, node::Exp::EIdentifier(identifier)))
+fn parse_identifier(input: &str) -> IResult<&str, Exp> {
+    let mut input = input;
+    let mut identifier;
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("EIdentifier")(input)?;
+    (input, identifier) = parse_quoted_string(input)?;
+    Ok((input, Exp::EIdentifier(identifier)))
 }
 
 #[test]
@@ -447,7 +437,7 @@ fn parse_math_operator(input: &str) -> IResult<&str, node::Exp> {
     (output, _) = tag("EMathOperator")(output)?;
     (output, _) = multispace0(output)?;
     let (output, math_operator) = parse_quoted_string(output)?;
-    Ok((output, node::Exp::EMathOperator(math_operator)))
+    Ok((output, Exp::EMathOperator(math_operator)))
 }
 
 #[test]
@@ -457,7 +447,7 @@ fn test_parse_text_type() {
 }
 
 // text_type: TextType
-fn parse_text_type(input: &str) -> IResult<&str, node::TextType> {
+fn parse_text_type(input: &str) -> IResult<&str, TextType> {
     alt((
         map(tag("TextNormal"), |_| node::TextType::TextNormal),
 
@@ -477,8 +467,6 @@ fn parse_text_type(input: &str) -> IResult<&str, node::TextType> {
         map(tag("TextDoubleStruck"), |_| node::TextType::TextDoubleStruck),
         map(tag("TextScript"), |_| node::TextType::TextScript),
         map(tag("TextFraktur"), |_| node::TextType::TextFraktur),
-
-
 
     ))(input)
 }
@@ -590,6 +578,7 @@ fn parse_grouped(input: &str) -> IResult<&str, node::Exp> {
 #[test]
 fn test_parse_root() {
     let test_case = "ERoot (ENumber \"1\") (ENumber \"2\")";
+    println!("{:?}", parse_root(test_case));
     assert_eq!(
         parse_root(test_case), 
         Ok(
@@ -597,25 +586,30 @@ fn test_parse_root() {
             node::Exp::ERoot(Box::new(node::Exp::ENumber("1".to_string())), 
             Box::new(node::Exp::ENumber("2".to_string()))))
         ));
+
+    let test_case = r#"ERoot (ENumber "1")"#;
+    assert_eq!(
+        parse_root(test_case),
+        Ok(
+            ("",
+            Exp::ERoot(Box::new(Exp::ENumber("1".to_string())),
+            Box::new(Exp::EText(TextType::TextNormal, "".to_string()))))
+        ));
+    println!("{:?}", parse_root(test_case));
 }
 
 // ERoot (Exp) (Exp)
 fn parse_root(input: &str) -> IResult<&str, node::Exp> {
-    let (input, _) = multispace0(input)?;
-    let (input, _) = tag("ERoot")(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, _) = char('(')(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, exp1) = parse_exp(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, _) = char(')')(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, _) = char('(')(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, exp2) = parse_exp(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, _) = char(')')(input)?;
-    Ok((input, node::Exp::ERoot(Box::new(exp1), Box::new(exp2))))
+    let mut input = input;
+    let mut exp1;
+    let mut exp2;
+
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("ERoot")(input)?;
+
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::ERoot(Box::new(exp1), Box::new(exp2))))
 }
 
 #[test]
@@ -664,6 +658,8 @@ fn test_parse_fraction() {
 }
 
 fn parse_fraction_type(input: &str) -> IResult<&str, node::FractionType> {
+    let mut input = input;
+    (input, _) = multispace0(input)?;
     alt((
         map(tag("NormalFrac"), |_| node::FractionType::NormalFrac),
         map(tag("DisplayFrac"), |_| node::FractionType::DisplayFrac),
@@ -674,45 +670,32 @@ fn parse_fraction_type(input: &str) -> IResult<&str, node::FractionType> {
 
 // EFraction FractionType (Exp) (Exp)
 fn parse_fraction(input: &str) -> IResult<&str, node::Exp> {
-    let mut output = input;
-    (output, _) = multispace0(output)?;
-    (output, _) = tag("EFraction")(output)?;
-    (output, _) = multispace0(output)?;
+    let mut input = input;
+    let mut fraction_type;
+    let mut exp1;
+    let mut exp2;
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("EFraction")(input)?;
 
-    let (tmp, fraction_type) = parse_fraction_type(output)?;
-    output = tmp;
+    (input, _) = multispace0(input)?;
+    (input, fraction_type) = parse_fraction_type(input)?;
 
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-
-    let (tmp, exp1) = parse_exp(output)?;
-    output = tmp;
-
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, exp2) = parse_exp(output)?;
-    output = tmp;
-
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    Ok((output, node::Exp::EFraction(fraction_type, Box::new(exp1), Box::new(exp2))))
+    (input, _) = multispace0(input)?;
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, _) = multispace0(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::EFraction(fraction_type, Box::new(exp1), Box::new(exp2))))
 }
 
 // ESqrt (Exp)
 fn parse_sqrt(input: &str) -> IResult<&str, node::Exp> {
-    let (input, _) = multispace0(input)?;
-    let (input, _) = tag("ESqrt")(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, _) = char('(')(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, exp) = parse_exp(input)?;
-    let (input, _) = multispace0(input)?;
-    let (input, _) = char(')')(input)?;
-    Ok((input, node::Exp::ESqrt(Box::new(exp))))
+    let mut input = input;
+    let mut base;
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("ESqrt")(input)?;
+
+    (input, base) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::ESqrt(Box::new(base))))
 }
 
 #[test]
@@ -734,19 +717,9 @@ fn parse_super(input: &str) -> IResult<&str, node::Exp> {
     let mut input = input;
     (input, _) = multispace0(input)?;
     (input, _) = tag("ESuper")(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp1) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp2) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    Ok((input, node::Exp::ESuper(Box::new(exp1), Box::new(exp2))))
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::ESuper(Box::new(exp1), Box::new(exp2))))
 }
 
 #[test]
@@ -756,8 +729,8 @@ fn test_parse_sub() {
         parse_sub(test_case), 
         Ok(
             ("", 
-            node::Exp::ESub(Box::new(node::Exp::ENumber("1".to_string())), 
-            Box::new(node::Exp::ENumber("2".to_string()))))
+            Exp::ESub(Box::new(Exp::ENumber("1".to_string())),
+            Box::new(Exp::ENumber("2".to_string()))))
         ));
 }
 
@@ -768,18 +741,9 @@ fn parse_sub(input: &str) -> IResult<&str, node::Exp> {
     let mut input = input;
     (input, _) = multispace0(input)?;
     (input, _) = tag("ESub")(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp1) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp2) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
+
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
     Ok((input, node::Exp::ESub(Box::new(exp1), Box::new(exp2))))
 }
 
@@ -804,25 +768,11 @@ fn parse_subsup(input: &str) -> IResult<&str, node::Exp> {
     let mut input = input;
     (input, _) = multispace0(input)?;
     (input, _) = tag("ESubsup")(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp1) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp2) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp3) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    Ok((input, node::Exp::ESubsup(Box::new(exp1), Box::new(exp2), Box::new(exp3))))
+
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    (input, exp3) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::ESubsup(Box::new(exp1), Box::new(exp2), Box::new(exp3))))
 }
 
 #[test]
@@ -834,14 +784,16 @@ fn test_parse_over() {
         parse_over(test_case.trim()), 
         Ok(
             ("", 
-            node::Exp::EOver(false,
-            Box::new(node::Exp::EIdentifier("\\981".to_string())),
-            Box::new(node::Exp::ESymbol(node::TeXSymbolType::Accent, "\\771".to_string()))))
+            Exp::EOver(false,
+            Box::new(Exp::EIdentifier("\\981".to_string())),
+            Box::new(Exp::ESymbol(node::TeXSymbolType::Accent, "\\771".to_string()))))
         )
     );
 }
 
 fn parse_bool(input: &str) -> IResult<&str, bool> {
+    let mut input = input;
+    (input, _) = multispace0(input)?;
     alt((
         map(tag("True"), |_| true),
         map(tag("true"), |_| true),
@@ -850,86 +802,70 @@ fn parse_bool(input: &str) -> IResult<&str, bool> {
     ))(input)
 }
 
+// (exp) -> exp or EText TextNormal "text"
+fn parse_exp_with_brace(input: &str) -> IResult<&str, Exp> {
+    let mut output = input;
+    let mut exp = Exp::EText(TextType::TextNormal, "".to_string());
+    (output, _) = multispace0(output)?;
+    if output.starts_with("(") {
+        (output, _) = char('(')(output)?;
+        (output, _) = multispace0(output)?;
+        (output, exp) = parse_exp(output)?;
+        (output, _) = multispace0(output)?;
+        (output, _) = char(')')(output)?;
+        Ok((output, exp))
+    } else {
+        Ok((output, exp))
+    }
+}
+
 // EOver false (Exp) (Exp)
-fn parse_over(input: &str) -> IResult<&str, node::Exp> {
+fn parse_over(input: &str) -> IResult<&str, Exp> {
     let mut input = input;
     let mut exp1;
     let mut exp2;
     let mut bool;
     (input, _) = multispace0(input)?;
     (input, _) = tag("EOver")(input)?;
-    (input, _) = multispace0(input)?;
+
     (input, bool) = parse_bool(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp1) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char('(')(input)?;
-    (input, _) = multispace0(input)?;
-    (input, exp2) = parse_exp(input)?;
-    (input, _) = multispace0(input)?;
-    (input, _) = char(')')(input)?;
-    Ok((input, node::Exp::EOver(bool, Box::new(exp1), Box::new(exp2))))
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::EOver(bool, Box::new(exp1), Box::new(exp2))))
 }
 
 // EUnder false (Exp) (Exp)
 fn parse_under(input: &str) -> IResult<&str, node::Exp> {
-    let mut output = input;
-    (output, _) = multispace0(output)?;
-    (output, _) = tag("EUnder")(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, bool) = parse_bool(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, exp1) = parse_exp(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, exp2) = parse_exp(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    Ok((output, node::Exp::EUnder(bool, Box::new(exp1), Box::new(exp2))))
+    let mut input = input;
+    let mut exp1;
+    let mut exp2;
+    let mut bool;
+
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("EUnder")(input)?;
+
+    (input, bool) = parse_bool(input)?;
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::EUnder(bool, Box::new(exp1), Box::new(exp2))))
 }
 
 // EUnderover false (Exp) (Exp) (Exp)
-fn parse_under_over(input: &str) -> IResult<&str, node::Exp> {
-    let mut output = input;
-    (output, _) = multispace0(output)?;
-    (output, _) = tag("EUnderover")(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, bool) = parse_bool(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, exp1) = parse_exp(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, exp2) = parse_exp(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    (output, _) = multispace0(output)?;
-    (output, _) = char('(')(output)?;
-    (output, _) = multispace0(output)?;
-    let (tmp, exp3) = parse_exp(output)?;
-    output = tmp;
-    (output, _) = multispace0(output)?;
-    (output, _) = char(')')(output)?;
-    Ok((output, node::Exp::EUnderOver(bool, Box::new(exp1), Box::new(exp2), Box::new(exp3))))
+fn parse_under_over(input: &str) -> IResult<&str, Exp> {
+    let mut input = input;
+    let mut exp1;
+    let mut exp2;
+    let mut exp3;
+    let mut bool;
+
+    (input, _) = multispace0(input)?;
+    (input, _) = tag("EUnderover")(input)?;
+
+    (input, bool) = parse_bool(input)?;
+    (input, exp1) = parse_exp_with_brace(input)?;
+    (input, exp2) = parse_exp_with_brace(input)?;
+    (input, exp3) = parse_exp_with_brace(input)?;
+    Ok((input, Exp::EUnderOver(bool, Box::new(exp1), Box::new(exp2), Box::new(exp3))))
 }
 
 #[test]
