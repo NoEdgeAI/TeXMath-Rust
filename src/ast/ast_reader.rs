@@ -256,7 +256,7 @@ lazy_static!{
 }
 fn parse_exp2(input: &str) -> IResult<&str, node::Exp> {
     let (mut input, _) = multispace0(input)?;
-    // fix: 通过直接提取Type避免if else多次匹配
+    // TODO: 通过直接提取Type避免if else多次匹配, 但先提取出了type, 与现有parse_exp不兼容
     let mut exp_type;
     // println!("{:?}", type_symbol);
 
