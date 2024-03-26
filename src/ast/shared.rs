@@ -5,6 +5,22 @@ use std::hash::BuildHasherDefault;
 use crate::ast::node::{Alignment, Exp, InEDelimited, Rational, TeXSymbolType, TextType};
 use crate::ast::tex_unicode::get_math_tex_many;
 
+use super::tex_unicode;
+
+// null exp:
+// EIdentifier ""
+// ENumber ""
+// EText TextNormal ""
+// EMathOperator ""
+pub fn is_null_exp(e: &Exp) -> bool{
+    match e{
+        &Exp::EIdentifier(ref s) => s.is_empty(),
+        &Exp::ENumber(ref s) => s.is_empty(),
+        &Exp::EText(_, ref s) => s.is_empty(),
+        &Exp::EMathOperator(ref s) => s.is_empty(),
+        _ => false,
+    }
+}
 #[test]
 fn test_get_diacriticals(){
     let case = "\\8254";

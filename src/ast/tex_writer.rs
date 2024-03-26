@@ -1,5 +1,4 @@
 use core::panic;
-use std::ascii::escape_default;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
@@ -212,7 +211,7 @@ pub fn write_tex_with_env(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Resul
 }
 
 #[test]
-fn test_write_text_default(){
+fn test_write_tex_default(){
     let exps = vec![
         Exp::EIdentifier("N".to_string()),
         Exp::ESymbol(TeXSymbolType::Rel, "=".to_string()),
@@ -259,6 +258,13 @@ fn test_write_text_default(){
     println!("res: {:?}", res);
 }
 
+fn write_tex_default(exps: Vec<Exp>) -> Result<String, String>{
+    let mut twc = default_context();
+    for exp in &exps {
+        write_exp(&mut twc, exp)?;
+    }
+    Ok(twc.tex.clone())
+}
 pub fn write_tex_equation(exps: Vec<Exp>) -> Result<String, String>{
     let mut twc = default_context();
     twc.push_raw("\\[");
@@ -269,13 +275,6 @@ pub fn write_tex_equation(exps: Vec<Exp>) -> Result<String, String>{
     Ok(twc.tex.clone())
 }
 
-pub fn write_tex_default(exps: Vec<Exp>) -> Result<String, String>{
-    let mut twc = default_context();
-    for exp in &exps {
-        write_exp(&mut twc, exp)?;
-    }
-    Ok(twc.tex.clone())
-}
 
 #[test]
 fn test_write_tex_with_md(){
@@ -469,6 +468,19 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
     // 1 & 2 & 3 \\
     // 4 & 5 & 6
     // \end{array}
+    let last_char = match c.tex.len() {
+        0 => ' ',
+        _ => c.tex.chars().last().unwrap(),
+    };
+    // 如果前面有^或_, 则需要group:
+    // ^{\begin{array}...\end{array}}
+    let need_group = match last_char {
+        '^' | '_' => true,
+        _ => false, 
+    };
+    if need_group {
+        c.push_text("{");
+    }
     c.push_text("\\begin{");
     c.push_text(name);
     c.push_text("}");
@@ -479,6 +491,9 @@ fn write_array_table(c: &mut TexWriterContext, name: &str, aligns: &Vec<Alignmen
     c.push_text("\\end{");
     c.push_text(name);
     c.push_text("}");
+    if need_group {
+        c.push_text("}");
+    }
     Ok(())
 }
 
@@ -774,12 +789,23 @@ fn write_script(c: &mut TexWriterContext, p: &Position, convertible: &bool, b: &
         if *convertible{
             c.convertible = true;
         }
-
-        if shared::is_fancy(b){
-            write_grouped_exp(c, b)?;
+        
+        if !tex_unicode::is_mathop_base(b){
+            c.push_text("\\mathop{");
+            if shared::is_fancy(b){
+                write_grouped_exp(c, b)?;
+            }else{
+                write_exp(c, b)?;
+            }
+            c.push_text("}");
         }else{
-            write_exp(c, b)?;
+            if shared::is_fancy(b){
+                write_grouped_exp(c, b)?;
+            }else{
+                write_exp(c, b)?;
+            }
         }
+        
 
         if !*convertible{
             c.push_text("\\limits");
@@ -928,6 +954,13 @@ fn write_under_over_add_group(c: &mut TexWriterContext, exp: &Exp) -> Result<(),
             Ok(())
         },
         _ => {
+            match exp {
+                Exp::EGrouped(_) => {
+                    dbg!(exp);
+                },
+                _ => {
+                }
+            }
             write_exp(c, exp)?;
             Ok(())
         }
@@ -951,7 +984,19 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
 
         Exp::EGrouped(exp_list) => {
             // 如果只有一个元素, 则不需要{}
-            if exp_list.len() == 1{
+            let last_char = match c.tex.len() {
+                0 => {
+                    ' '
+                },
+                _ => {
+                    c.tex.chars().last().unwrap()
+                }
+            };
+
+            // ? TIPS: 当最后一个字符是^或_时, {}是必须的
+            if exp_list.len() == 0{
+                c.push_text("{}");
+            }else if exp_list.len() == 1 && last_char != '^' && last_char != '_'{
                 write_exp(c, &exp_list[0])?;
             }else{
                 c.push_text("{");
@@ -960,7 +1005,6 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 }
                 c.push_text("}");
             }
-
         },
 
         Exp::EDelimited(left, right, exp_list) => {
@@ -1101,7 +1145,9 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::ESub(exp1, exp2) => {
-            if shared::is_fancy(exp1){
+            if shared::is_null_exp(exp1){
+                c.push_text("{}");
+            }else if shared::is_fancy(exp1){
                 write_grouped_exp(c, exp1)?;
             }else{
                 write_under_over_add_group(c, exp1)?;
@@ -1112,7 +1158,9 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::ESuper(exp1, exp2) => {
-            if shared::is_fancy(exp1){
+            if shared::is_null_exp(exp1){
+                c.push_text("{}");
+            }else if shared::is_fancy(exp1){
                 write_grouped_exp(c, exp1)?;
             }else{
                 write_under_over_add_group(c, exp1)?;
@@ -1123,7 +1171,9 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::ESubsup(exp1, exp2, exp3) => {
-            if shared::is_fancy(exp1){
+            if shared::is_null_exp(exp1){
+                c.push_text("{}");
+            }else if shared::is_fancy(exp1){
                 write_grouped_exp(c, exp1)?;
             }else{
                 write_under_over_add_group(c, exp1)?;
@@ -1274,12 +1324,26 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                     c.convertible = true;
                 }
 
-                if shared::is_fancy(b){
-                    write_grouped_exp(c, b)?;
+                // 当不是Mathop时, 如果要加上limits, 则需要添加\mathop{}
+                // |\limits_{a}^{b} f(x) -> \mathop{|}\limits_{a}^{b} f(x)
+                
+                if !tex_unicode::is_mathop_base(b){
+                    c.push_text("\\mathop{");
+                    if shared::is_fancy(b){
+                        write_grouped_exp(c, b)?;
+                    }else{
+                        write_exp(c, b)?;
+                    }
+                    c.push_text("}");
                 }else{
-                    write_exp(c, b)?;
+                    if shared::is_fancy(b){
+                        write_grouped_exp(c, b)?;
+                    }else{
+                        write_exp(c, b)?;
+                    }
                 }
-
+                
+                
                 if !*convertible{
                     c.push_text("\\limits");
                 }
