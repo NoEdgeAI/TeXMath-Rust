@@ -1,4 +1,5 @@
 use core::panic;
+use std::ascii::escape_default;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
@@ -267,6 +268,7 @@ pub fn write_tex_equation(exps: Vec<Exp>) -> Result<String, String>{
     twc.push_raw("\\]");
     Ok(twc.tex.clone())
 }
+
 pub fn write_tex_default(exps: Vec<Exp>) -> Result<String, String>{
     let mut twc = default_context();
     for exp in &exps {
@@ -274,6 +276,7 @@ pub fn write_tex_default(exps: Vec<Exp>) -> Result<String, String>{
     }
     Ok(twc.tex.clone())
 }
+
 #[test]
 fn test_write_tex_with_md(){
     let envs = HashMap::new();
@@ -325,12 +328,14 @@ fn test_write_tex_with_md(){
     let res = write_tex_with_md(exps, &envs).unwrap();
     println!("res: {:?}", res);
 }
+
 pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result<String, String>{
     let mut twc = default_context();
+    twc.envs = envs.clone();
     if exps.len() == 1{
         return match exps[0] {
             Exp::EText(TextType::TextNormal, ref s) => {
-                twc.push_text(s);
+                twc.push_text(&escapse_text(s, true));
                 Ok(twc.tex.clone())
             },
             _ => {
@@ -352,7 +357,7 @@ pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result
                     twc.push_raw("\\) ");
                     in_exp = false;
                 }
-                twc.push_text(s);
+                twc.push_text(&escapse_text(s, true));
             },
             _ => {
                 if !in_exp {
@@ -1162,7 +1167,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 return Ok(());
             }
             let (cmd, repeats) = shared::get_text_cmd(text_type);
-            let text = &escapse_text(str);
+            let text = &escapse_text(str, false);
 
             c.push_text(&format!("{}{}{}", cmd, text, "}".repeat(repeats as usize)));
         },
