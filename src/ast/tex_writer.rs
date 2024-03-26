@@ -30,6 +30,8 @@ pub fn default_context() -> TexWriterContext {
     envs.insert("amsmath".to_string(), true);
     envs.insert("amssymb".to_string(), true);
     envs.insert("mathbb".to_string(), true);
+    envs.insert("amsfonts".to_string(), true);
+    envs.insert("fourier".to_string(), true);
     TexWriterContext {
         tex: String::new(),
         envs,
@@ -1071,7 +1073,21 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 -3 => {
                     c.push_text("\\!");
                 },
-                0 => {},
+                0 => {
+                    // ? 如果前面有_或^, 这里需要添加{}(占位符)
+                    // ESuper (ENumber "80" ) (ESymbol Ord "\8242" ) ,
+                    // ESuper (ESpace (0 % 1) ) (ENumber "3" )
+                    // 否则出现 80^{\prime}^3
+                    // 正确: 80^{\prime}{}^3
+                    let last_char = match c.tex.len() {
+                        0 => ' ',
+                        _ => c.tex.chars().last().unwrap(),
+                    };
+
+                    if last_char == '^' || last_char == '_'{
+                        c.push_text("{}");
+                    }
+                },
                 3 => {
                     c.push_text("\\,");
                 },
