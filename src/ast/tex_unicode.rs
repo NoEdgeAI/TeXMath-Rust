@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::BuildHasherDefault};
+use std::{collections::HashMap, hash::{BuildHasherDefault, Hash}};
 use lazy_static::lazy_static;
 use ahash::AHasher;
 use crate::config;
@@ -22,7 +22,7 @@ fn spilt_as_char(s: &str) -> Vec<char>{
             // 1. \n \t \r等转义字符 -> Escape
             // 2. \d{1~5} unicode码点 -> Unicode
             // 3. \" \\ 等引号内转义字符
-            // TODO: 可能会出现i+1越界的情况, 主要是\后面没有字符的情况, 实际上是非法的
+            // ! WARING: 可能会出现i+1越界的情况, 主要是\后面没有字符的情况, 实际上是非法的
             let next = s.chars().nth(i + 1).unwrap();
             if next.is_ascii_digit() {
                 let mut j = i + 1;
@@ -62,19 +62,20 @@ fn spilt_as_char(s: &str) -> Vec<char>{
 #[test]
 fn test_escapse_text(){
     let s = r#"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_""#;
-    let res = escapse_text(s);
+    let res = escapse_text(s, true);
     println!("{:?}", res);
 }
+
 // 把文本中的\1234直接转为unicode
-pub fn escapse_text(s: &str) -> String{
+pub fn escapse_text(s: &str, escape: bool) -> String{
     let mut res = String::new();
     let chars = spilt_as_char(s);
     for c in chars {
-        if let Some(escaped) = escape_latex(c) {
-            if escaped == "\\ "{
-                res.push_str(" ");
+        if escape{
+            if let Some(escapse) = escape_latex(c) {
+                res.push_str(&escapse);
             }else{
-                res.push_str(&escaped);
+                res.push(c);
             }
         }else{
             res.push(c);
