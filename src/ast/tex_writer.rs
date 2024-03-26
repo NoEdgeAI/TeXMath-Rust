@@ -955,14 +955,17 @@ fn write_under_over_add_group(c: &mut TexWriterContext, exp: &Exp) -> Result<(),
             }
             Ok(())
         },
-        _ => {
-            match exp {
-                Exp::EGrouped(_) => {
-                    dbg!(exp);
-                },
-                _ => {
-                }
+        Exp::EMathOperator(s) => {
+            if s.len() > 1{
+                c.push_text("{");
+                write_exp(c, exp)?;
+                c.push_text("}");
+            }else{
+                write_exp(c, exp)?;
             }
+            Ok(())
+        },
+        _ => {
             write_exp(c, exp)?;
             Ok(())
         }
@@ -1056,7 +1059,13 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 c.push_text(&escaped);
                 c.push_text("}}");
             }else{
-                c.push_text(&escaped);
+                if symbol.len() > 1{
+                    c.push_text("{");
+                    c.push_text(&escaped);
+                    c.push_text("}");
+                }else{
+                    c.push_text(&escaped);
+                }
             }
 
             // 如果是Bin, Rel则需要添加一个空格
