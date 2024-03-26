@@ -2,7 +2,7 @@ use std::{collections::HashMap, hash::{BuildHasherDefault, Hash}};
 use lazy_static::lazy_static;
 use ahash::AHasher;
 use crate::config;
-use super::{node, shared::{escape_latex, parse_as_unicode_char}};
+use super::{node::{self, Exp}, shared::{escape_latex, parse_as_unicode_char}};
 
 #[test]
 fn test_spilt_as_char() {
@@ -156,30 +156,13 @@ pub fn get_math_tex_many(s: &str, envs: &HashMap<String, bool>) -> (String, usiz
 
 #[test]
 fn test_lookup_tex_cmd_table(){
-    // assert_eq!(lookup_tex_cmd_table("\\8722", &HashMap::new()), Some(
-    //     tex_cmd_val{
-    //         category: "Bin".to_string(),
-    //         val: "-".to_string(),
-    //     }
-    // ));
-    // assert_eq!(lookup_tex_cmd_table("\\177", &HashMap::new()), Some(
-    //     tex_cmd_val{
-    //         category: "Ord".to_string(),
-    //         val: "\\pm".to_string(),
-    //     }
-    // ));
-    // assert_eq!(lookup_tex_cmd_table("\\8747", &HashMap::new()), Some(
-    //     tex_cmd_val{
-    //         category: "Op".to_string(),
-    //         val: "\\int".to_string(),
-    //     }
-    // ));
-    // assert_eq!(lookup_tex_cmd_table("\\8594", &HashMap::new()), Some(
-    //     tex_cmd_val{
-    //         category: "Rel".to_string(),
-    //         val: "\\rightarrow".to_string(),
-    //     }
-    // ));
+    let mut envs = HashMap::new();
+    envs.insert("amsmath".to_string(), true);
+    envs.insert("amssymb".to_string(), true);
+    assert_eq!(lookup_tex_cmd_table(&'∔', &envs), Some(TexCmdVal{
+        category: "Bin".to_string(),
+        val: "\\dotplus".to_string(),
+    }));
 }
 
 // 查表, 转换unicode码点为tex命令
@@ -203,6 +186,53 @@ fn lookup_tex_cmd_table(c: &char, envs: &HashMap<String, bool>) -> Option<TexCmd
                 return Some(res);
             }
         }
+    }
+    None
+}
+
+pub fn is_mathop_base(e: &Exp) -> bool{
+    match e{
+        Exp::ESymbol(node::TeXSymbolType::Op, s) => {
+            if let Some(res) = lookup_tex_cmd_base_with_not_escape(s) {
+                if res.category == "Op" {
+                    return true;
+                }
+            }
+            return false;
+        },
+        _ => {
+            return false;
+        }
+    }
+}
+
+#[test]
+fn test_lookup_tex_cmd_base_with_not_escape(){
+    let s = "\\8722";
+    let res = lookup_tex_cmd_base_with_not_escape(s);
+    assert_eq!(res, Some(TexCmdVal{
+        category: "Bin".to_string(),
+        val: "-".to_string(),
+    }));
+}
+
+fn lookup_tex_cmd_base_with_not_escape(s: &str) -> Option<TexCmdVal> {
+    let escaped;
+    if s.starts_with("\\"){
+        escaped = parse_as_unicode_char(s).unwrap();
+    }else{
+        if s.len() == 0{
+            return None;
+        }
+        escaped = s.chars().next().unwrap();
+    };
+
+    if let Some(base) = TEX_TABLE.get(("base_".to_string() + escaped.to_string().as_str()).as_str()) {
+        let res = TexCmdVal{
+            category: base.category.to_string(),
+            val: base.val.to_string(),
+        };
+        return Some(res);
     }
     None
 }
@@ -315,7 +345,7 @@ lazy_static! {
                 val: record.get(3).expect("Missing val").to_string(),
             }));
 
-            // TODO: tex_cmd_table中有些字符顺序是反的, 所以只添加第一个
+            // ? TIPS: tex_cmd_table中有些字符顺序是反的, 所以只添加第一个
             if m.contains_key(key.as_str()) {
                 continue;
             }
@@ -340,6 +370,7 @@ lazy_static! {
             let key = Box::leak(Box::new(format!("{}_{}", text_type_str, text)));
             let val = Box::leak(Box::new(unicode.to_string()));
             m.insert(key, val);
+
         }
         m
     };
