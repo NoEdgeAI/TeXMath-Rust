@@ -694,6 +694,35 @@ fn test_delimited_write_general_exp(){
     delimited_write_general_exp(&mut c, &open, &close, &exp_list).unwrap();
     println!("res: {:?}", c.tex);
 }
+
+fn is_undefined(s: &str) -> bool {
+    // \597
+    // \657
+    // \658
+    // \8364
+    // \8377
+
+    match s {
+        "\\597" => {
+            return true;
+        },
+        "\\657" => {
+            return true;
+        },
+        "\\658" => {
+            return true;
+        },
+        "\\8364" => {
+            return true;
+        },
+        "\\8377" => {
+            return true;
+        },
+        _ => {
+            return false;
+        }
+    }
+}
 fn delimited_write_general_exp(c: &mut TexWriterContext, open: &String, close: &String, exp_list: &Vec<InEDelimited>) -> Result<(), String>{
 //     writeExp (EDelimited open close es)
 //   | all isStandardHeight es
@@ -1041,16 +1070,15 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::ESymbol(symbol_type, symbol) => {
-            let escaped = shared::escape_text_as_tex(&symbol, &c.envs);
-            // ? TIPS: 非法字符, 套\text{}处理
-            // check if exist ɕ ʑ ʒ € ₹
-            if escaped == "ɕ" || escaped == "ʑ" || escaped == "ʒ" || escaped == "€" || escaped == "₹"{
+            // ? TIPS: 非法字符, 套\text{}处理 \8364,\8377
+            if is_undefined(&symbol){
                 c.push_text("\\text{");
-                c.push_text(escaped.as_str());
+                c.push_text(shared::escape_text_as_tex(symbol, &c.envs).as_str());
                 c.push_text("}");
                 return Ok(());
             }
-
+            let escaped = shared::escape_text_as_tex(&symbol, &c.envs);
+            
             // 如果是Bin, Rel则需要添加一个空格
             if *symbol_type == TeXSymbolType::Bin || *symbol_type == TeXSymbolType::Rel{
                 c.push_space();
@@ -1148,6 +1176,12 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
         },
 
         Exp::EIdentifier(identifier) => {
+            if is_undefined(&identifier){
+                c.push_text("\\text{");
+                c.push_text(shared::escape_text_as_tex(&identifier, &c.envs).as_str());
+                c.push_text("}");
+                return Ok(());
+            }
             // 为了防止连续的标识符被合并, 需要在标识符之间添加空格, 如:
             // \alphax -> \alpha x
             let (escaped, nums) = get_math_tex_many(&identifier, &c.envs);
@@ -1167,14 +1201,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                     c.push_text("}");
                 }
             }else{
-                // check if exist ɕ ʑ ʒ € ₹
-                if escaped == "ɕ" || escaped == "ʑ" || escaped == "ʒ" || escaped == "€" || escaped == "₹"{
-                    c.push_text("\\text{");
-                    c.push_text(escaped.as_str());
-                    c.push_text("}");
-                }else{
-                    c.push_text(escaped.as_str());
-                }
+                c.push_text(escaped.as_str());
             }
 
         },
