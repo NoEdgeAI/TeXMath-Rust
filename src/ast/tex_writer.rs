@@ -1145,6 +1145,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             if escaped.len() == 0{
                 return Ok(());
             }
+            
 
             if nums > 1{
                 // 检查外层有没有括号, 如果有则不需要添加{}
@@ -1157,7 +1158,14 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                     c.push_text("}");
                 }
             }else{
-                c.push_text(&escaped);
+                // check if exist ɕ ʑ ʒ € ₹
+                if escaped == "ɕ" || escaped == "ʑ" || escaped == "ʒ" || escaped == "€" || escaped == "₹"{
+                    c.push_text("\\text{");
+                    c.push_text(escaped.as_str());
+                    c.push_text("}");
+                }else{
+                    c.push_text(escaped.as_str());
+                }
             }
 
         },

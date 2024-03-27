@@ -83,6 +83,7 @@ fn escape_text_char(c: &char) -> String{
         '{' => "\\{".to_string(),
         '}' => "\\}".to_string(),
         '\\' => "\\\\".to_string(),
+        
         _ => c.to_string()
     }
 }
