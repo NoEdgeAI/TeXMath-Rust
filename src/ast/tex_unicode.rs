@@ -62,27 +62,51 @@ fn spilt_as_char(s: &str) -> Vec<char>{
 #[test]
 fn test_escapse_text(){
     let s = r#"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_""#;
-    let res = escapse_text(s, true);
+    let res = escapse_text(s);
     println!("{:?}", res);
 }
 
-// 把文本中的\1234直接转为unicode
-pub fn escapse_text(s: &str, escape: bool) -> String{
+// 转义EText中的字符: \text{...} 里面的字符转义
+pub fn escapse_text(s: &str) -> String{
     let mut res = String::new();
     let chars = spilt_as_char(s);
     for c in chars {
-        if escape{
-            if let Some(escapse) = escape_latex(c) {
-                res.push_str(&escapse);
-            }else{
-                res.push(c);
-            }
-        }else{
-            res.push(c);
-        }
+        res.push_str(&escape_text_char(&c));
     }
     res
 }
+
+// 转义EText中的字符: \text{...} 里面的字符转义
+fn escape_text_char(c: &char) -> String{
+    match c {
+        '$' => "\\$".to_string(),
+        '{' => "\\{".to_string(),
+        '}' => "\\}".to_string(),
+        '\\' => "\\\\".to_string(),
+        _ => c.to_string()
+    }
+}
+
+// 转义文本中的字符: \text{...} 里面的字符提出到markdown环境的转义
+pub fn escaped_text_md(s: &str) -> String{
+    let mut res = String::new();
+    let chars = spilt_as_char(s);
+    for c in chars {
+        res.push_str(&escape_md_char(&c));
+    }
+    res
+}
+
+// 转义文本中的字符: \text{...} 里面的字符提出到markdown环境的转义
+fn escape_md_char(c: &char) -> String{
+    match c {
+        '$' => "\\$".to_string(),
+        '#' => "\\#".to_string(),
+        '%' => "\\%".to_string(),
+        _ => c.to_string()
+    }
+}
+
 #[test]
 fn test_get_math_tex_many(){
     let s = "a\\n\\t\\r\\8722\\177\\8747,test\\65024";

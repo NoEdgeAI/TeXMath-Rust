@@ -4,6 +4,7 @@ use std::fs;
 use std::io::Write;
 use crate::ast::tex_unicode::{escapse_text, get_math_tex_many};
 use crate::pretty_print_hex;
+use super::tex_unicode::escaped_text_md;
 use super::{judge, shared, tex_unicode};
 use super::shared::{is_fancy, is_mathoperator, FenceType, Position};
 use super::node::{Alignment, ArrayLines, Exp, FractionType, InEDelimited, TeXSymbolType, TextType};
@@ -328,6 +329,13 @@ fn test_write_tex_with_md(){
 
     let res = write_tex_with_md(exps, &envs).unwrap();
     println!("res: {:?}", res);
+
+    let exps = vec![
+        Exp::EText(TextType::TextNormal, "as\\${}sfa*#% ".to_string()),
+    ];
+
+    let res = write_tex_with_md(exps, &envs).unwrap();
+    println!("res: {:?}", res);
 }
 
 pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result<String, String>{
@@ -336,7 +344,7 @@ pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result
     if exps.len() == 1{
         return match exps[0] {
             Exp::EText(TextType::TextNormal, ref s) => {
-                twc.push_text(&escapse_text(s, true));
+                twc.push_text(&escaped_text_md(s));
                 Ok(twc.tex.clone())
             },
             _ => {
@@ -358,7 +366,7 @@ pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result
                     twc.push_raw("\\) ");
                     in_exp = false;
                 }
-                twc.push_text(&escapse_text(s, true));
+                twc.push_text(&escaped_text_md(s));
             },
             _ => {
                 if !in_exp {
@@ -376,6 +384,7 @@ pub fn write_tex_with_md(exps: Vec<Exp>, envs: &HashMap<String, bool>) -> Result
 
     Ok(twc.tex.clone().trim().to_string())
 }
+
 #[test]
 fn test_write_grouped_exp(){
     // \sqrt{aaa}
@@ -1242,7 +1251,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 return Ok(());
             }
             let (cmd, repeats) = shared::get_text_cmd(text_type);
-            let text = &escapse_text(str, false);
+            let text = &escapse_text(str);
 
             c.push_text(&format!("{}{}{}", cmd, text, "}".repeat(repeats as usize)));
         },
