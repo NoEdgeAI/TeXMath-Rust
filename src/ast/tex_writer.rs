@@ -1042,6 +1042,15 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
 
         Exp::ESymbol(symbol_type, symbol) => {
             let escaped = shared::escape_text_as_tex(&symbol, &c.envs);
+            // ? TIPS: 非法字符, 套\text{}处理
+            // check if exist ɕ ʑ ʒ € ₹
+            if escaped == "ɕ" || escaped == "ʑ" || escaped == "ʒ" || escaped == "€" || escaped == "₹"{
+                c.push_text("\\text{");
+                c.push_text(escaped.as_str());
+                c.push_text("}");
+                return Ok(());
+            }
+
             // 如果是Bin, Rel则需要添加一个空格
             if *symbol_type == TeXSymbolType::Bin || *symbol_type == TeXSymbolType::Rel{
                 c.push_space();
