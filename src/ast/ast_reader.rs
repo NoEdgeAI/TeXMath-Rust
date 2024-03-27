@@ -720,6 +720,13 @@ fn parse_super(input: &str) -> IResult<&str, node::Exp> {
     (input, _) = tag("ESuper")(input)?;
     (input, exp1) = parse_exp_with_brace(input)?;
     (input, exp2) = parse_exp_with_brace(input)?;
+
+    // ? TIPS: 如果Super的exp2是空的, 那么没必要包装成ESuper, 直接返回exp1即可 
+    if let Exp::EGrouped(lists) = &exp2 {
+        if lists.len() == 0 {
+            return Ok((input, exp1));
+        }
+    }
     Ok((input, Exp::ESuper(Box::new(exp1), Box::new(exp2))))
 }
 
@@ -745,6 +752,13 @@ fn parse_sub(input: &str) -> IResult<&str, node::Exp> {
 
     (input, exp1) = parse_exp_with_brace(input)?;
     (input, exp2) = parse_exp_with_brace(input)?;
+
+    // ? TIPS: 如果Sub的exp2是空的, 那么没必要包装成ESub, 直接返回exp1即可
+    if let Exp::EGrouped(lists) = &exp2 {
+        if lists.len() == 0 {
+            return Ok((input, exp1));
+        }
+    }
     Ok((input, node::Exp::ESub(Box::new(exp1), Box::new(exp2))))
 }
 
@@ -832,6 +846,7 @@ fn parse_over(input: &str) -> IResult<&str, Exp> {
     (input, bool) = parse_bool(input)?;
     (input, exp1) = parse_exp_with_brace(input)?;
     (input, exp2) = parse_exp_with_brace(input)?;
+
     Ok((input, Exp::EOver(bool, Box::new(exp1), Box::new(exp2))))
 }
 

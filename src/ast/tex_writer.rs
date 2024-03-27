@@ -975,7 +975,7 @@ fn write_under_over_add_group(c: &mut TexWriterContext, exp: &Exp) -> Result<(),
             Ok(())
         },
         _ => {
-            write_exp(c, exp)?;
+            write_grouped_exp(c, exp)?;
             Ok(())
         }
     }
@@ -1010,7 +1010,7 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             // ? TIPS: 当最后一个字符是^或_时, {}是必须的
             if exp_list.len() == 0{
                 c.push_text("{}");
-            }else if exp_list.len() == 1 && last_char != '^' && last_char != '_'{
+            }else if exp_list.len() == 1 && last_char != '^' && last_char != '_' && last_char != ' '{
                 write_exp(c, &exp_list[0])?;
             }else{
                 c.push_text("{");
@@ -1191,13 +1191,13 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
             write_grouped_exp(c, exp2)?;
         },
 
-        Exp::ESuper(exp1, exp2) => {
-            if shared::is_null_exp(exp1){
+        Exp::ESuper(base, exp2) => {
+            if shared::is_null_exp(base){
                 c.push_text("{}");
-            }else if shared::is_fancy(exp1){
-                write_grouped_exp(c, exp1)?;
+            }else if shared::is_fancy(base){
+                write_grouped_exp(c, base)?;
             }else{
-                write_under_over_add_group(c, exp1)?;
+                write_under_over_add_group(c, base)?;
             }
 
             c.push_text("^");
