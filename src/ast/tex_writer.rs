@@ -1076,6 +1076,8 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 c.push_text(shared::escape_text_as_tex(symbol, &c.envs).as_str());
                 c.push_text("}");
                 return Ok(());
+            }else if symbol == "\\17"{
+                return Ok(());
             }
             let escaped = shared::escape_text_as_tex(&symbol, &c.envs);
             
@@ -1208,7 +1210,8 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
 
         Exp::EMathOperator(math_operator) => {
             let escaped = shared::escape_text_as_tex(&math_operator, &c.envs);
-
+        
+            
             if is_mathoperator(escaped.as_str()) {
                 c.push_text(format!("\\{}", escaped).as_str());
             }else{
@@ -1217,7 +1220,17 @@ fn write_exp(c: &mut TexWriterContext, exp: &Exp) -> Result<(), String>{
                 }else{
                     c.push_text("\\operatorname{");
                 }
-                c.push_text(&escaped);
+                let mut new_escape = String::new();
+                for i in escaped.chars(){
+                    if i == '₹'{
+                        new_escape.push_str("\\text{");
+                        new_escape.push(i);
+                        new_escape.push_str("}");
+                    }else{
+                        new_escape.push(i);
+                    }
+                }
+                c.push_text(&new_escape);
                 c.push_text("}");
             }
         },
