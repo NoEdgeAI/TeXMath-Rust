@@ -4,6 +4,7 @@ texmath Rust实现版本
 参考[texmath-haskell](https://github.com/jgm/texmath)
 
 ## 用法
+设置好config.toml文件, 然后运行:
 ```bash
 texmath-rust server
 ```
@@ -105,15 +106,15 @@ EText并不是这样转换, 直接使用unicode字符, 但是需要转义Latex�
 1. 两次遍历合并为一次遍历, 这样使得代码更加复杂, 但是可以减少一次遍历的开销
 2. 使用全局buffer String, 减少局部String的创建分配
 
-- 性能测试(伪):
+- 性能测试:
 ![img.png](img.png)
 快500倍以上
 
 ### TODO
+- [ ] 边界情况太多, Writer部分过于繁杂, 没有处理{{exp}}的情况
+- [ ] 进行树的变换, 如ESuper (exp1) (null) -> exp1, 以减少节点数和writer压力以及优化写后的表达式, 避免出现exp1^{}{}^exp2这样的情况(应当为exp1^exp2)
 - [ ] 优化AST Reader的match部分
-- [ ] 增加AI Node的转换
 - [ ] 在读取字符串时就把\1234这样的转义unicode转换为unicode单字符, 而不是等到转换时再转换
-- [ ] 为长Identifier增加{}包裹, 但又不增加多余的{}包裹
 - [ ] 优化tex.push_text()的逻辑, 加快速度
-- [ ] 整理代码
+- [ ] 整理代码(主要是合并shard.rs和tex_unicode.rs)
 - [ ] 增加Benchmark测试和性能观测
